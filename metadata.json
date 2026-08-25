@@ -1,0 +1,8 @@
+{
+  "name": "Forex Intelligence Platform",
+  "description": "Plateforme SaaS d'intelligence de marché Forex, analyse technique et fondamentale assistée par IA, gestion du risque et orchestration d'exécution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

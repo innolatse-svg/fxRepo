@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --color-bg-base: #0a0a0b;
+    --color-bg-card: #141417;
+    --color-bg-subtle: #0d0d0f;
+    --color-border: rgba(51, 65, 85, 0.6);
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+  }
+
+  html.light, body.light {
+    --color-bg-base: #f8fafc;
+    --color-bg-card: #ffffff;
+    --color-bg-subtle: #f1f5f9;
+    --color-border: #e2e8f0;
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #0a0a0b;
+    color: #E2E8F0;
+    overflow-x: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  html.light body, body.light {
+    background-color: #f8fafc;
+    color: #0f172a;
+  }
+}
+
+/* ============================================================ */
+/* LIGHT MODE GLOBAL ADAPTATIONS                                */
+/* ============================================================ */
+html.light {
+  color-scheme: light;
+}
+
+html.light .bg-\[\#0a0a0b\],
+html.light .bg-\[\#0a0a0b\]\/95,
+html.light .bg-\[\#0a0a0b\]\/80,
+html.light .bg-\[\#0a0a0b\]\/90 {
+  background-color: #f8fafc !important;
+}
+
+html.light .bg-\[\#0d0d0f\],
+html.light .bg-\[\#0f0f12\],
+html.light .bg-\[\#141417\],
+html.light .bg-\[\#121215\],
+html.light .bg-\[\#18181c\] {
+  background-color: #ffffff !important;
+}
+
+html.light .bg-slate-900,
+html.light .bg-slate-950 {
+  background-color: #f1f5f9 !important;
+}
+
+html.light .border-slate-800,
+html.light .border-slate-800\/80,
+html.light .border-slate-800\/60,
+html.light .border-slate-800\/50,
+html.light .border-slate-700,
+html.light .border-slate-700\/80 {
+  border-color: #e2e8f0 !important;
+}
+
+html.light .border-slate-900 {
+  border-color: #f1f5f9 !important;
+}
+
+/* Text adaptations in light mode */
+html.light header .text-white,
+html.light h1.text-white,
+html.light h2.text-white,
+html.light h3.text-white,
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light article .text-white {
+  color: #0f172a !important;
+}
+
+html.light .text-slate-300 {
+  color: #334155 !important;
+}
+
+html.light .text-slate-400 {
+  color: #64748b !important;
+}
+
+html.light .text-slate-500 {
+  color: #64748b !important;
+}
+
+/* Light mode card shadows */
+html.light app-card > div,
+html.light article,
+html.light .bg-\[\#141417\],
+html.light .bg-\[\#0f0f12\] {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Inputs & Forms in Light Mode */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input:focus,
+html.light select:focus,
+html.light textarea:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Buttons in Light Mode */
+html.light button.bg-slate-800,
+html.light .bg-slate-800 {
+  background-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+html.light button.bg-slate-800:hover,
+html.light .bg-slate-800:hover {
+  background-color: #e2e8f0 !important;
+}
+
+html.light button.bg-white,
+html.light .bg-white {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+html.light button.bg-white:hover,
+html.light .bg-white:hover {
+  background-color: #1e293b !important;
+}
+
+/* Primary emerald buttons remain emerald with black text for readability */
+html.light button.bg-emerald-500,
+html.light .bg-emerald-500 {
+  background-color: #10b981 !important;
+  color: #000000 !important;
+}
+
+html.light button.bg-emerald-500:hover,
+html.light .bg-emerald-500:hover {
+  background-color: #059669 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0b;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e1e24;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2d2d38;
+}
+
+html.light ::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+html.light ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Financial Grid & Glow Background Elements */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+}
+
+html.light .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+}
+
+.bg-dot-pattern {
+  background-size: 20px 20px;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+html.light .bg-dot-pattern {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.08) 1px, transparent 1px);
+}
+
+.glow-ambient-emerald {
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.12), transparent 65%);
+}
+
+html.light .glow-ambient-emerald {
+  background: radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.08), transparent 65%);
+}
+
+.glow-ambient-cyan {
+  background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.12), transparent 70%);
+}
+
+.glow-ambient-indigo {
+  background: radial-gradient(circle at 50% 100%, rgba(16, 185, 129, 0.08), transparent 70%);
+}
+
+/* Material Icons Alignment */
+.mat-icon {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Continuous Market Ticker Animation */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker 28s linear infinite;
+}
+
+.animate-ticker:hover {
+  animation-play-state: paused;
+}
+
+
