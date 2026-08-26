@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/guards/auth.guard';
+import { guestGuard } from './core/guards/guest.guard';
 
 export const routes: Routes = [
   // Public Layout Shell (Landing Page)
@@ -17,6 +19,7 @@ export const routes: Routes = [
   // Authentication Layout Shell
   {
     path: 'auth',
+    canActivate: [guestGuard],
     loadComponent: () => import('./layout/auth-layout/auth-layout').then(m => m.AuthLayoutComponent),
     children: [
       {
@@ -50,6 +53,7 @@ export const routes: Routes = [
   // Onboarding Wizard Layout Shell
   {
     path: 'onboarding',
+    canActivate: [authGuard],
     loadComponent: () => import('./layout/onboarding-layout/onboarding-layout').then(m => m.OnboardingLayoutComponent),
     children: [
       {
@@ -116,6 +120,7 @@ export const routes: Routes = [
   // Authenticated App Shell & Dashboard (/app)
   {
     path: 'app',
+    canActivate: [authGuard],
     loadComponent: () => import('./layout/authenticated-layout/authenticated-layout').then(m => m.AuthenticatedLayoutComponent),
     children: [
       {

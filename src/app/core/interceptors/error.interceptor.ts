@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { SessionService } from '../services/session.service';
+import { Router } from '@angular/router';
 
 /**
  * ErrorInterceptor
@@ -9,6 +10,7 @@ import { SessionService } from '../services/session.service';
  */
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const sessionService = inject(SessionService);
+  const router = inject(Router);
 
   return next(req).pipe(
     catchError((error: unknown) => {
@@ -17,11 +19,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           case 401:
             // Token expired or invalid -> trigger session timeout modal
             console.warn('[HTTP 401] Session expiré ou non authentifié');
+            localStorage.removeItem('token');
+            router.navigate(['/auth/login']);
             sessionService.triggerSessionExpired();
             break;
           case 403:
             // Forbidden access
             console.error('[HTTP 403] Accès refusé - permissions insuffisantes');
+            router.navigate(['/auth/login']);
             break;
           case 429:
             // Rate limiting from Spring Boot backend
