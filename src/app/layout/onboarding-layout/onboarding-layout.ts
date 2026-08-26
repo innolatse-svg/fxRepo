@@ -1,12 +1,15 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 import { OnboardingService } from '../../core/services/onboarding.service';
+import { LogoComponent } from '../../shared/components/logo/logo';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-onboarding-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, LogoComponent, ThemeToggleComponent],
   template: `
     <div class="min-h-screen flex flex-col justify-between bg-[#08080a] text-slate-200 relative overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
       
@@ -19,22 +22,10 @@ import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme
 
       <!-- Top Header Navigation & Stepper -->
       <header class="w-full border-b border-slate-800/80 bg-[#0a0a0b]/90 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
           
           <!-- Brand Logo -->
-          <a routerLink="/" class="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded p-1">
-            <div class="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center font-bold text-black text-xs italic tracking-tighter shadow-sm group-hover:bg-emerald-400 transition-colors">
-              FI
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-base sm:text-lg font-bold tracking-tight text-white uppercase font-sans">
-                Forex Intel
-              </span>
-              <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[9px] font-bold tracking-widest uppercase border border-emerald-500/20">
-                SETUP
-              </span>
-            </div>
-          </a>
+          <app-logo routerLink="/" badge="SETUP" size="md"></app-logo>
 
           <!-- Progress Stepper Indicator (Center/Right) -->
           <div class="flex items-center gap-3 sm:gap-6">
@@ -49,11 +40,17 @@ import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme
               </div>
             </div>
 
-            <!-- Visual Circular / Bar Mini Gauge -->
-            <div class="w-16 sm:w-28 bg-slate-800/80 h-2 rounded-full overflow-hidden border border-slate-700/50 p-0.5">
+            <!-- Visual Bar Mini Gauge perfectly synced with step -->
+            <div 
+              class="w-16 sm:w-28 bg-slate-800/80 h-2 rounded-full overflow-hidden border border-slate-700/50 p-0.5" 
+              role="progressbar" 
+              [attr.aria-valuenow]="currentStep()" 
+              aria-valuemin="1" 
+              aria-valuemax="6" 
+              [attr.aria-label]="'Progression onboarding : Étape ' + currentStep() + ' sur 6'">
               <div
                 class="bg-emerald-500 h-full rounded-full transition-all duration-300 ease-out"
-                [style.width.%]="(currentStep() / 6) * 100">
+                [style.width.%]="progressPercent()">
               </div>
             </div>
 
@@ -90,14 +87,22 @@ export class OnboardingLayoutComponent {
   onboardingService = inject(OnboardingService);
   router = inject(Router);
 
+  private navEndUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects || e.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
   currentStep = computed(() => {
-    const url = this.router.url;
-    if (url.includes('/welcome')) return 1;
+    const url = this.navEndUrl() || this.router.url;
     if (url.includes('/trading-preferences')) return 2;
     if (url.includes('/risk-management')) return 3;
     if (url.includes('/trading-accounts')) return 4;
     if (url.includes('/automation')) return 5;
     if (url.includes('/complete')) return 6;
+    if (url.includes('/welcome')) return 1;
     return this.onboardingService.currentStep();
   });
 
@@ -111,5 +116,9 @@ export class OnboardingLayoutComponent {
       case 6: return 'Finalisation';
       default: return 'Configuration';
     }
+  });
+
+  progressPercent = computed(() => {
+    return Math.round((this.currentStep() / 6) * 100);
   });
 }

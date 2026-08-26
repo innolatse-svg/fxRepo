@@ -1,12 +1,13 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { FooterComponent } from '../footer/footer';
+import { LogoComponent } from '../../shared/components/logo/logo';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-legal-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, FooterComponent, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FooterComponent, LogoComponent, ThemeToggleComponent],
   template: `
     <div class="min-h-screen flex flex-col bg-[#0a0a0b] text-slate-200">
       
@@ -19,22 +20,12 @@ import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme
             
             <!-- Left: Logo & Wordmark + Discreet Back Button -->
             <div class="flex items-center gap-6">
-              <a
-                routerLink="/"
-                class="flex items-center gap-2.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded"
-                aria-label="Retour à la page d'accueil Forex Intel">
-                <div class="w-7 h-7 bg-emerald-500 rounded flex items-center justify-center font-extrabold text-black text-xs group-hover:bg-emerald-400 transition-colors">
-                  FX
-                </div>
-                <div class="flex flex-col">
-                  <span class="font-extrabold tracking-wider text-sm sm:text-base text-white uppercase group-hover:text-slate-100 transition-colors">
-                    FOREX<span class="text-emerald-400">INTEL</span>
-                  </span>
-                  <span class="text-[9px] font-mono text-slate-400 tracking-widest uppercase hidden sm:block">
-                    Documentation Légale
-                  </span>
-                </div>
-              </a>
+              <app-logo 
+                routerLink="/" 
+                size="md" 
+                badge="LÉGAL" 
+                badgeVariant="neutral">
+              </app-logo>
 
               <div class="hidden md:block h-5 w-[1px] bg-slate-800"></div>
 

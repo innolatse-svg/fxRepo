@@ -4,7 +4,7 @@ export type ImpactLevel = 'HIGH' | 'MEDIUM' | 'LOW';
 export type AccountType = 'DEMO' | 'LIVE';
 export type ConnectionStatus = 'CONNECTED' | 'DISCONNECTED' | 'DISABLED';
 export type AssetCategory = 'FOREX' | 'COMMODITY' | 'CRYPTO';
-export type TimeframeType = 'M15' | 'H1' | 'H4' | 'D1';
+export type TimeframeType = 'M1' | 'M5' | 'M15' | 'M30' | 'H1' | 'H4' | 'D1';
 
 export interface Candle {
   timestamp: number;

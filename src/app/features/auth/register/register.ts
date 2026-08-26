@@ -3,6 +3,7 @@ import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, Validatio
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { ButtonComponent } from '../../../shared/components/button/button';
+import { LogoComponent } from '../../../shared/components/logo/logo';
 
 export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
   const password = control.get('password');
@@ -17,7 +18,7 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
 @Component({
   selector: 'app-register',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent],
+  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, LogoComponent],
   template: `
     <div class="w-full max-w-5xl mx-auto py-4">
       
@@ -36,13 +37,8 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
               ESSAI GRATUIT 15 JOURS
             </div>
 
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 bg-emerald-500 rounded flex items-center justify-center font-bold text-black text-sm italic tracking-tighter shadow-md">
-                FI
-              </div>
-              <h1 class="text-2xl font-bold tracking-tight text-white uppercase font-sans">
-                Forex Intel
-              </h1>
+            <div>
+              <app-logo routerLink="/" size="lg" badge="PRO"></app-logo>
             </div>
           </div>
 
@@ -91,13 +87,8 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
         <div class="lg:col-span-7 w-full max-w-md mx-auto lg:max-w-none">
           
           <!-- Mobile Brand Banner -->
-          <div class="sm:hidden mb-6 text-center space-y-2">
-            <div class="inline-flex items-center justify-center w-10 h-10 bg-emerald-500 rounded font-bold text-black text-sm italic shadow-md">
-              FI
-            </div>
-            <h1 class="text-xl font-bold tracking-tight text-white uppercase font-sans">
-              Forex Intel
-            </h1>
+          <div class="sm:hidden mb-6 text-center space-y-2 flex flex-col items-center">
+            <app-logo routerLink="/" size="md" badge="PRO"></app-logo>
             <p class="text-xs text-emerald-400 font-mono">
               15 jours d'accès gratuit &bull; Sans carte bancaire
             </p>
@@ -118,6 +109,36 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
                 Commencez avec 15 jours d'accès gratuit.
               </p>
             </div>
+
+            <!-- Demonstration / Feedback Alert Notice -->
+            @if (authService.demoFeedbackMessage(); as feedback) {
+              <div class="mb-5 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-start gap-3 animate-in fade-in duration-200">
+                <span class="mat-icon text-emerald-400 text-lg flex-shrink-0 mt-0.5">check_circle</span>
+                <div class="space-y-1">
+                  <div class="font-bold text-emerald-200 uppercase tracking-wider text-[10px]">
+                    Inscription Validée
+                  </div>
+                  <p class="text-slate-300 leading-relaxed">
+                    {{ feedback }}
+                  </p>
+                </div>
+              </div>
+            }
+
+            <!-- Server/Validation Error Banner -->
+            @if (authService.lastAuthError(); as err) {
+              <div class="mb-5 p-4 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-3 animate-in fade-in duration-200">
+                <span class="mat-icon text-rose-400 text-lg flex-shrink-0 mt-0.5">error_outline</span>
+                <div class="space-y-1">
+                  <div class="font-bold text-rose-200 uppercase tracking-wider text-[10px]">
+                    Erreur d'inscription
+                  </div>
+                  <p class="text-slate-300 leading-relaxed">
+                    {{ err.message }}
+                  </p>
+                </div>
+              </div>
+            }
 
             <!-- Reactive Register Form -->
             <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-4" novalidate>
@@ -279,7 +300,22 @@ export const passwordMatchValidator: ValidatorFn = (control: AbstractControl): V
                     class="mt-0.5 w-4 h-4 rounded border-slate-700 bg-[#141417] text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer accent-emerald-500"
                   />
                   <span class="leading-snug">
-                    J'accepte les <span class="text-emerald-400 hover:underline">Conditions d'utilisation</span> et la <span class="text-emerald-400 hover:underline">Politique de confidentialité</span>.
+                    J'accepte les 
+                    <a 
+                      routerLink="/legal/terms" 
+                      target="_blank" 
+                      (click)="$event.stopPropagation()" 
+                      class="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors font-medium focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 rounded">
+                      Conditions d'utilisation
+                    </a> 
+                    et la 
+                    <a 
+                      routerLink="/legal/privacy" 
+                      target="_blank" 
+                      (click)="$event.stopPropagation()" 
+                      class="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors font-medium focus:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 rounded">
+                      Politique de confidentialité
+                    </a>.
                   </span>
                 </label>
 
@@ -422,6 +458,7 @@ export class RegisterComponent {
 
   async onSubmit() {
     this.isSubmitted.set(true);
+    this.authService.clearFeedback();
 
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
@@ -430,7 +467,7 @@ export class RegisterComponent {
 
     const formVal = this.registerForm.getRawValue();
 
-    // Call registration abstraction (ready for Spring Boot POST /api/auth/register)
+    // Call registration abstraction backed by MockUserStorageService
     const response = await this.authService.register({
       firstName: formVal.firstName.trim(),
       lastName: formVal.lastName.trim(),

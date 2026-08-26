@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AUTOMATION_LEVELS, OnboardingService } from '../../../core/services/onboarding.service';
 import { AutomationLevel } from '../../../core/models/onboarding.model';
@@ -188,11 +188,15 @@ import { ButtonComponent } from '../../../shared/components/button/button';
     }
   `
 })
-export class OnboardingAutomationComponent {
+export class OnboardingAutomationComponent implements OnInit {
   onboardingService = inject(OnboardingService);
   router = inject(Router);
 
   levels = AUTOMATION_LEVELS;
+
+  ngOnInit() {
+    this.onboardingService.setStep(5);
+  }
 
   selectedLevel = computed(() => {
     return this.onboardingService.automationPreferences().selectedLevel;

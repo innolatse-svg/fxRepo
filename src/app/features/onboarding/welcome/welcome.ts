@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { OnboardingService } from '../../../core/services/onboarding.service';
 import { ButtonComponent } from '../../../shared/components/button/button';
@@ -113,9 +113,13 @@ import { ButtonComponent } from '../../../shared/components/button/button';
   `,
   styles: ``
 })
-export class OnboardingWelcomeComponent {
+export class OnboardingWelcomeComponent implements OnInit {
   onboardingService = inject(OnboardingService);
   router = inject(Router);
+
+  ngOnInit() {
+    this.onboardingService.setStep(1);
+  }
 
   startSetup() {
     this.onboardingService.setStep(2);

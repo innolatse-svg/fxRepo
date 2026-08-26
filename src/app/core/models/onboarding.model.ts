@@ -17,6 +17,8 @@ export interface RiskPreferences {
   maxDailyLossPct: number;    // e.g. 3.0 %
   maxOpenPositions: number;    // e.g. 3
   maxSimultaneousExposurePct: number; // e.g. 6.0 %
+  newsFilterActive?: boolean;
+  weekendLockActive?: boolean;
 }
 
 export interface TradingAccountOption {

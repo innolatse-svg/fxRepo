@@ -85,6 +85,25 @@ export class MarketDemoService {
       lastUpdated: '12:00:00'
     },
     {
+      symbol: 'USD/CHF',
+      name: 'US Dollar / Franc Suisse',
+      category: 'FOREX',
+      bid: 0.88450,
+      ask: 0.88458,
+      spread: 0.8,
+      change24h: -0.12,
+      high24h: 0.88720,
+      low24h: 0.88200,
+      digits: 5,
+      pipSize: 0.0001,
+      bias: 'NEUTRAL',
+      trend: 'NEUTRAL',
+      aiConfidence: 68,
+      lastTickDirection: 'DOWN',
+      sparkline: [0.8860, 0.8852, 0.8848, 0.8842, 0.8846, 0.8845],
+      lastUpdated: '12:00:00'
+    },
+    {
       symbol: 'AUD/USD',
       name: 'Dollar Australien / USD',
       category: 'FOREX',
@@ -101,6 +120,101 @@ export class MarketDemoService {
       aiConfidence: 74,
       lastTickDirection: 'UP',
       sparkline: [0.6560, 0.6568, 0.6575, 0.6570, 0.6580, 0.6584],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'USD/CAD',
+      name: 'US Dollar / Dollar Canadien',
+      category: 'FOREX',
+      bid: 1.35420,
+      ask: 1.35431,
+      spread: 1.1,
+      change24h: -0.22,
+      high24h: 1.35800,
+      low24h: 1.35200,
+      digits: 5,
+      pipSize: 0.0001,
+      bias: 'BEARISH',
+      trend: 'SELL',
+      aiConfidence: 76,
+      lastTickDirection: 'DOWN',
+      sparkline: [1.3570, 1.3562, 1.3550, 1.3545, 1.3540, 1.3542],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'NZD/USD',
+      name: 'Dollar Néo-Zélandais / USD',
+      category: 'FOREX',
+      bid: 0.58920,
+      ask: 0.58932,
+      spread: 1.2,
+      change24h: 0.28,
+      high24h: 0.59200,
+      low24h: 0.58650,
+      digits: 5,
+      pipSize: 0.0001,
+      bias: 'BULLISH',
+      trend: 'BUY',
+      aiConfidence: 72,
+      lastTickDirection: 'UP',
+      sparkline: [0.5875, 0.5880, 0.5885, 0.5890, 0.5888, 0.5892],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'EUR/GBP',
+      name: 'Euro / Livre Sterling',
+      category: 'FOREX',
+      bid: 0.84020,
+      ask: 0.84028,
+      spread: 0.8,
+      change24h: 0.15,
+      high24h: 0.84250,
+      low24h: 0.83850,
+      digits: 5,
+      pipSize: 0.0001,
+      bias: 'NEUTRAL',
+      trend: 'NEUTRAL',
+      aiConfidence: 65,
+      lastTickDirection: 'UP',
+      sparkline: [0.8390, 0.8395, 0.8400, 0.8398, 0.8401, 0.8402],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'EUR/JPY',
+      name: 'Euro / Yen Japonais',
+      category: 'FOREX',
+      bid: 167.750,
+      ask: 167.761,
+      spread: 1.1,
+      change24h: -0.35,
+      high24h: 168.600,
+      low24h: 167.200,
+      digits: 3,
+      pipSize: 0.01,
+      bias: 'BEARISH',
+      trend: 'SELL',
+      aiConfidence: 78,
+      lastTickDirection: 'DOWN',
+      sparkline: [168.40, 168.10, 167.90, 167.70, 167.80, 167.75],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'GBP/JPY',
+      name: 'Livre Sterling / Yen Japonais',
+      category: 'FOREX',
+      bid: 199.650,
+      ask: 199.664,
+      spread: 1.4,
+      change24h: -0.45,
+      high24h: 200.800,
+      low24h: 199.100,
+      digits: 3,
+      pipSize: 0.01,
+      bias: 'BEARISH',
+      trend: 'SELL',
+      aiConfidence: 80,
+      lastTickDirection: 'DOWN',
+      sparkline: [200.40, 200.10, 199.85, 199.60, 199.70, 199.65],
       lastUpdated: '12:00:00'
     },
     {
@@ -123,6 +237,82 @@ export class MarketDemoService {
       lastUpdated: '12:00:00'
     },
     {
+      symbol: 'XAG/USD',
+      name: 'Argent Spot (Silver) / USD',
+      category: 'COMMODITY',
+      bid: 32.45,
+      ask: 32.48,
+      spread: 3.0,
+      change24h: 1.45,
+      high24h: 32.85,
+      low24h: 31.90,
+      digits: 2,
+      pipSize: 0.01,
+      bias: 'BULLISH',
+      trend: 'STRONG_BUY',
+      aiConfidence: 86,
+      lastTickDirection: 'UP',
+      sparkline: [32.0, 32.15, 32.30, 32.25, 32.40, 32.45],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'US30',
+      name: 'Dow Jones Industrial 30',
+      category: 'COMMODITY',
+      bid: 43850.00,
+      ask: 43852.50,
+      spread: 2.5,
+      change24h: 0.65,
+      high24h: 44100.00,
+      low24h: 43600.00,
+      digits: 2,
+      pipSize: 1.0,
+      bias: 'BULLISH',
+      trend: 'BUY',
+      aiConfidence: 81,
+      lastTickDirection: 'UP',
+      sparkline: [43650, 43720, 43800, 43780, 43830, 43850],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'NAS100',
+      name: 'Nasdaq 100 Tech Index',
+      category: 'COMMODITY',
+      bid: 20820.00,
+      ask: 20821.80,
+      spread: 1.8,
+      change24h: 0.88,
+      high24h: 20950.00,
+      low24h: 20650.00,
+      digits: 2,
+      pipSize: 1.0,
+      bias: 'BULLISH',
+      trend: 'STRONG_BUY',
+      aiConfidence: 87,
+      lastTickDirection: 'UP',
+      sparkline: [20680, 20740, 20790, 20760, 20800, 20820],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'GER40',
+      name: 'DAX 40 Allemagne',
+      category: 'COMMODITY',
+      bid: 19280.00,
+      ask: 19281.50,
+      spread: 1.5,
+      change24h: 0.35,
+      high24h: 19350.00,
+      low24h: 19180.00,
+      digits: 2,
+      pipSize: 1.0,
+      bias: 'BULLISH',
+      trend: 'BUY',
+      aiConfidence: 79,
+      lastTickDirection: 'UP',
+      sparkline: [19200, 19230, 19260, 19240, 19270, 19280],
+      lastUpdated: '12:00:00'
+    },
+    {
       symbol: 'BTC/USD',
       name: 'Bitcoin / US Dollar',
       category: 'CRYPTO',
@@ -139,6 +329,25 @@ export class MarketDemoService {
       aiConfidence: 89,
       lastTickDirection: 'UP',
       sparkline: [76400, 76800, 77250, 77100, 77600, 77950],
+      lastUpdated: '12:00:00'
+    },
+    {
+      symbol: 'ETH/USD',
+      name: 'Ethereum / US Dollar',
+      category: 'CRYPTO',
+      bid: 3280.50,
+      ask: 3281.80,
+      spread: 1.3,
+      change24h: 1.85,
+      high24h: 3340.00,
+      low24h: 3210.00,
+      digits: 2,
+      pipSize: 0.1,
+      bias: 'BULLISH',
+      trend: 'BUY',
+      aiConfidence: 85,
+      lastTickDirection: 'UP',
+      sparkline: [3220, 3245, 3260, 3255, 3275, 3280.5],
       lastUpdated: '12:00:00'
     }
   ]);
@@ -169,11 +378,41 @@ export class MarketDemoService {
   });
 
   readonly timeframeOptions: { id: TimeframeType; label: string; name: string; desc: string }[] = [
+    { id: 'M1', label: '1M', name: '1 Minute', desc: 'Ultra Scalping & Micro Structure' },
+    { id: 'M5', label: '5M', name: '5 Minutes', desc: 'Scalping Très Court Terme' },
     { id: 'M15', label: '15M', name: '15 Minutes', desc: 'Scalping & Flux Court Terme' },
+    { id: 'M30', label: '30M', name: '30 Minutes', desc: 'Intraday Court & Niveaux' },
     { id: 'H1', label: '1H', name: '1 Heure', desc: 'Intraday & Momentum' },
     { id: 'H4', label: '4H', name: '4 Heures', desc: 'Structure Swing & Piliers IA' },
     { id: 'D1', label: '1D', name: '1 Jour', desc: 'Tendance Macro & Niveaux Clés' }
   ];
+
+  /**
+   * Transforms symbol like 'EUR/USD' to URL slug 'EURUSD'
+   */
+  getSlugFromSymbol(symbol: string): string {
+    if (!symbol) return 'EURUSD';
+    return symbol.replace(/[/\-_]/g, '').toUpperCase();
+  }
+
+  /**
+   * Resolves URL slug like 'EURUSD' or 'BTCUSD' to canonical symbol 'EUR/USD'
+   */
+  getSymbolFromSlug(slug: string): string {
+    if (!slug) return 'EUR/USD';
+    const cleanSlug = slug.replace(/[/\-_]/g, '').toUpperCase();
+    
+    // Check if match in existing pairs
+    const match = this.pairs().find(p => this.getSlugFromSymbol(p.symbol) === cleanSlug);
+    if (match) return match.symbol;
+
+    // Check custom 6-letter forex pairs
+    if (cleanSlug.length === 6) {
+      return `${cleanSlug.substring(0, 3)}/${cleanSlug.substring(3)}`;
+    }
+
+    return cleanSlug;
+  }
 
   // Dynamic pillar scores adapted to active asset
   readonly pillarScores = computed<PillarScore[]>(() => {
@@ -450,14 +689,14 @@ export class MarketDemoService {
   ]);
 
   constructor() {
-    // Pre-initialize candleStore with high-fidelity realistic OHLC candles for all assets & timeframes
+    // Pre-initialize candleStore with deep institutional-grade OHLC history (750+ candles)
     const initialStore: Record<string, Partial<Record<TimeframeType, Candle[]>>> = {};
-    const tfs: TimeframeType[] = ['M15', 'H1', 'H4', 'D1'];
+    const tfs: TimeframeType[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
 
     for (const p of this.pairs()) {
       initialStore[p.symbol] = {};
       for (const tf of tfs) {
-        initialStore[p.symbol]![tf] = this.generateCandleSeries(p.symbol, tf, p.bid, p.digits, p.bias, 28);
+        initialStore[p.symbol]![tf] = this.generateCandleSeries(p.symbol, tf, p.bid, p.digits, p.bias, 750);
       }
     }
     this.candleStore.set(initialStore);
@@ -494,35 +733,43 @@ export class MarketDemoService {
 
   /**
    * Generates realistic Candlestick Series matching asset, timeframe and current market price
+   * Produces a deep historical buffer of up to 1000+ candles with natural volatility & trends
    */
-  generateCandleSeries(symbol: string, tf: TimeframeType, currentPrice: number, digits: number, bias: MarketBias, count = 28): Candle[] {
+  generateCandleSeries(symbol: string, tf: TimeframeType, currentPrice: number, digits: number, bias: MarketBias, count = 750): Candle[] {
     const now = Date.now();
     let stepMs = 4 * 3600 * 1000;
-    if (tf === 'M15') stepMs = 15 * 60 * 1000;
+    if (tf === 'M1') stepMs = 60 * 1000;
+    else if (tf === 'M5') stepMs = 5 * 60 * 1000;
+    else if (tf === 'M15') stepMs = 15 * 60 * 1000;
+    else if (tf === 'M30') stepMs = 30 * 60 * 1000;
     else if (tf === 'H1') stepMs = 60 * 60 * 1000;
     else if (tf === 'H4') stepMs = 4 * 3600 * 1000;
     else if (tf === 'D1') stepMs = 24 * 3600 * 1000;
 
     let pipUnit = 0.0001;
-    if (symbol === 'USD/JPY') pipUnit = 0.01;
-    else if (symbol === 'XAU/USD') pipUnit = 0.10;
-    else if (symbol === 'BTC/USD') pipUnit = 1.0;
+    if (symbol === 'USD/JPY' || symbol === 'EUR/JPY' || symbol === 'GBP/JPY') pipUnit = 0.01;
+    else if (symbol === 'XAU/USD' || symbol === 'XAG/USD' || symbol === 'ETH/USD') pipUnit = 0.10;
+    else if (symbol === 'BTC/USD' || symbol === 'US30' || symbol === 'NAS100' || symbol === 'GER40') pipUnit = 1.0;
 
     let atrPips = 25;
-    if (tf === 'M15') atrPips = symbol === 'BTC/USD' ? 220 : symbol === 'XAU/USD' ? 25 : symbol === 'USD/JPY' ? 10 : 7;
-    else if (tf === 'H1') atrPips = symbol === 'BTC/USD' ? 520 : symbol === 'XAU/USD' ? 65 : symbol === 'USD/JPY' ? 22 : 16;
-    else if (tf === 'H4') atrPips = symbol === 'BTC/USD' ? 1250 : symbol === 'XAU/USD' ? 160 : symbol === 'USD/JPY' ? 55 : 38;
-    else if (tf === 'D1') atrPips = symbol === 'BTC/USD' ? 2900 : symbol === 'XAU/USD' ? 380 : symbol === 'USD/JPY' ? 120 : 85;
+    if (tf === 'M1') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 80 : symbol === 'XAU/USD' ? 10 : symbol.includes('JPY') ? 5 : 3;
+    else if (tf === 'M5') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 140 : symbol === 'XAU/USD' ? 18 : symbol.includes('JPY') ? 8 : 5;
+    else if (tf === 'M15') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 220 : symbol === 'XAU/USD' ? 25 : symbol.includes('JPY') ? 12 : 8;
+    else if (tf === 'M30') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 360 : symbol === 'XAU/USD' ? 42 : symbol.includes('JPY') ? 18 : 12;
+    else if (tf === 'H1') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 520 : symbol === 'XAU/USD' ? 65 : symbol.includes('JPY') ? 25 : 18;
+    else if (tf === 'H4') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 1250 : symbol === 'XAU/USD' ? 160 : symbol.includes('JPY') ? 60 : 42;
+    else if (tf === 'D1') atrPips = (symbol === 'BTC/USD' || symbol === 'US30') ? 2900 : symbol === 'XAU/USD' ? 380 : symbol.includes('JPY') ? 130 : 95;
 
     const atr = atrPips * pipUnit;
     const candles: Candle[] = [];
     let curr = currentPrice;
 
+    // Generate historical candles backwards from current price with micro-cycles
     for (let i = count - 1; i >= 0; i--) {
       const time = now - (count - 1 - i) * stepMs;
       const dateObj = new Date(time);
       let timeLabel = '';
-      if (tf === 'M15' || tf === 'H1') {
+      if (tf === 'M1' || tf === 'M5' || tf === 'M15' || tf === 'M30' || tf === 'H1') {
         timeLabel = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       } else if (tf === 'H4') {
         const d = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -543,7 +790,9 @@ export class MarketDemoService {
         candles.unshift({ timestamp: time, timeLabel, open, high, low, close, volume });
         curr = open;
       } else {
-        const trendFactor = bias === 'BULLISH' ? 0.54 : bias === 'BEARISH' ? 0.46 : 0.50;
+        // Subtle cyclical waves to create realistic swing highs and swing lows
+        const wave = Math.sin(i / 18) * 0.08;
+        const trendFactor = bias === 'BULLISH' ? (0.53 + wave) : bias === 'BEARISH' ? (0.47 + wave) : (0.50 + wave);
         const move = (Math.random() - (1 - trendFactor)) * atr * 1.15;
         const close = Number(curr.toFixed(digits));
         const open = Number((curr - move).toFixed(digits));
@@ -559,7 +808,7 @@ export class MarketDemoService {
   }
 
   /**
-   * Fetches real live klines from Binance API for crypto/gold or computes forex series
+   * Fetches real live klines from Binance API for crypto/gold or computes forex series with deep history (750+ candles)
    */
   async fetchCandlesForPair(symbol: string, tf: TimeframeType): Promise<void> {
     if (!this.isBrowser) return;
@@ -570,9 +819,9 @@ export class MarketDemoService {
 
       if (isBtc || isGold) {
         const binanceSymbol = isBtc ? 'BTCUSDT' : 'PAXGUSDT';
-        const binanceInterval = tf === 'M15' ? '15m' : tf === 'H1' ? '1h' : tf === 'H4' ? '4h' : '1d';
+        const binanceInterval = tf === 'M1' ? '1m' : tf === 'M5' ? '5m' : tf === 'M15' ? '15m' : tf === 'M30' ? '30m' : tf === 'H1' ? '1h' : tf === 'H4' ? '4h' : '1d';
         
-        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${binanceInterval}&limit=28`);
+        const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${binanceInterval}&limit=1000`);
         if (res.ok) {
           const rawKlines: [number, string, string, string, string, string, ...unknown[]][] = await res.json();
           if (Array.isArray(rawKlines) && rawKlines.length > 0) {
@@ -580,7 +829,7 @@ export class MarketDemoService {
               const timestamp = k[0];
               const dateObj = new Date(timestamp);
               let timeLabel = '';
-              if (tf === 'M15' || tf === 'H1') {
+              if (tf === 'M1' || tf === 'M5' || tf === 'M15' || tf === 'M30' || tf === 'H1') {
                 timeLabel = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
               } else if (tf === 'H4') {
                 const d = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -615,9 +864,15 @@ export class MarketDemoService {
         }
       }
 
-      // For Forex pairs or if api fetch fails, generate synchronous high precision series
+      // For Forex pairs or if api fetch fails, generate synchronous high precision deep series
       const pair = this.pairs().find(p => p.symbol === symbol) || this.activePair();
-      const generated = this.generateCandleSeries(symbol, tf, pair.bid, pair.digits, pair.bias, 28);
+      const existing = this.candleStore()[symbol]?.[tf];
+      if (existing && existing.length >= 500) {
+        // Already loaded deep history, no need to overwrite unless needed
+        return;
+      }
+
+      const generated = this.generateCandleSeries(symbol, tf, pair.bid, pair.digits, pair.bias, 750);
       
       this.candleStore.update(store => {
         return {
@@ -747,6 +1002,23 @@ export class MarketDemoService {
           };
         });
       });
+
+      // Synchronize and align candle store with new live rates to prevent sudden candle jumps
+      const currentPairs = this.pairs();
+      const tfs: TimeframeType[] = ['M1', 'M5', 'M15', 'M30', 'H1', 'H4', 'D1'];
+      this.candleStore.update(store => {
+        const updated = { ...store };
+        for (const p of currentPairs) {
+          // Keep crypto/gold Binance candles if already loaded, regenerate forex with coherent live baseline
+          if (p.symbol !== 'BTC/USD' && p.symbol !== 'XAU/USD') {
+            if (!updated[p.symbol]) updated[p.symbol] = {};
+            for (const tf of tfs) {
+              updated[p.symbol]![tf] = this.generateCandleSeries(p.symbol, tf, p.bid, p.digits, p.bias, 50);
+            }
+          }
+        }
+        return updated;
+      });
     } catch (err) {
       console.warn('Real market data fetch issue, keeping live ticks:', err);
     } finally {
@@ -833,19 +1105,83 @@ export class MarketDemoService {
 
   /**
    * Updates the latest candle of the active series with incoming micro-ticks
+   * Efficiently mutates only the forming candle or rolls over to a new candle when the timeframe period expires
    */
   private updateLiveCandleTick(symbol: string, tf: TimeframeType, currentPrice: number, digits: number): void {
     this.candleStore.update(store => {
       const pairSeries = store[symbol]?.[tf];
       if (!pairSeries || pairSeries.length === 0) return store;
 
+      const now = Date.now();
+      let stepMs = 60 * 60 * 1000;
+      if (tf === 'M1') stepMs = 60 * 1000;
+      else if (tf === 'M5') stepMs = 5 * 60 * 1000;
+      else if (tf === 'M15') stepMs = 15 * 60 * 1000;
+      else if (tf === 'M30') stepMs = 30 * 60 * 1000;
+      else if (tf === 'H1') stepMs = 60 * 60 * 1000;
+      else if (tf === 'H4') stepMs = 4 * 3600 * 1000;
+      else if (tf === 'D1') stepMs = 24 * 3600 * 1000;
+
       const lastIdx = pairSeries.length - 1;
       const lastCandle = pairSeries[lastIdx];
+
+      // Check if current candle period has completed and a new candle should open
+      if (now - lastCandle.timestamp >= stepMs) {
+        const dateObj = new Date(now);
+        let timeLabel = '';
+        if (tf === 'M1' || tf === 'M5' || tf === 'M15' || tf === 'M30' || tf === 'H1') {
+          timeLabel = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        } else if (tf === 'H4') {
+          const d = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+          const h = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+          timeLabel = `${d} ${h}`;
+        } else {
+          timeLabel = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+        }
+
+        const newCandle: Candle = {
+          timestamp: now,
+          timeLabel,
+          open: currentPrice,
+          high: currentPrice,
+          low: currentPrice,
+          close: currentPrice,
+          volume: Math.floor(10 + Math.random() * 20)
+        };
+
+        // Maintain buffer size up to 1000 candles
+        const newSeries = pairSeries.length >= 1000 
+          ? [...pairSeries.slice(pairSeries.length - 999), newCandle] 
+          : [...pairSeries, newCandle];
+
+        return {
+          ...store,
+          [symbol]: {
+            ...(store[symbol] || {}),
+            [tf]: newSeries
+          }
+        };
+      }
+
+      // If price suddenly jumps significantly (> 2.0% gap from preceding candle), smoothly recalibrate series
+      const priceGap = Math.abs(currentPrice - (lastCandle.open || currentPrice)) / (lastCandle.open || 1);
+      if (priceGap > 0.025) {
+        const pair = this.pairs().find(p => p.symbol === symbol);
+        const bias = pair?.bias || 'NEUTRAL';
+        const regenerated = this.generateCandleSeries(symbol, tf, currentPrice, digits, bias, pairSeries.length);
+        return {
+          ...store,
+          [symbol]: {
+            ...(store[symbol] || {}),
+            [tf]: regenerated
+          }
+        };
+      }
 
       const newHigh = Number(Math.max(lastCandle.high, currentPrice).toFixed(digits));
       const newLow = Number(Math.min(lastCandle.low, currentPrice).toFixed(digits));
       const newClose = Number(currentPrice.toFixed(digits));
-      const newVol = lastCandle.volume + Math.floor(Math.random() * 6) + 1;
+      const newVol = lastCandle.volume + Math.floor(Math.random() * 4) + 1;
 
       const updatedCandles = [...pairSeries];
       updatedCandles[lastIdx] = {

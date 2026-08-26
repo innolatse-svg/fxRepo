@@ -59,12 +59,12 @@ export interface RenderedCandle {
           <!-- CTAs -->
           <div class="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a routerLink="/auth/register" class="w-full sm:w-auto">
-              <button type="button" class="w-full sm:w-auto bg-white text-black px-8 py-3.5 rounded font-bold text-xs uppercase tracking-widest hover:bg-slate-200 transition-colors cursor-pointer shadow-lg shadow-white/5">
+              <button type="button" class="w-full sm:w-auto bg-emerald-500 text-black px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-400 transition-colors cursor-pointer shadow-md shadow-emerald-500/15">
                 Démarrer l'essai gratuit (15j)
               </button>
             </a>
             <a href="#product-preview" class="w-full sm:w-auto">
-              <button class="w-full sm:w-auto border border-slate-700 text-white px-8 py-3.5 rounded font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-colors cursor-pointer">
+              <button class="w-full sm:w-auto border border-slate-700/80 bg-[#141417] text-slate-200 hover:text-white px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-[#1a1a1e] transition-colors cursor-pointer">
                 Explorer l'aperçu de la plateforme
               </button>
             </a>

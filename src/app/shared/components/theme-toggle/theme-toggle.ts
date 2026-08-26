@@ -11,12 +11,12 @@ import { ThemeService } from '../../../core/services/theme.service';
       (click)="toggle()"
       [attr.aria-label]="themeService.theme() === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'"
       [title]="themeService.theme() === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'"
-      class="theme-toggle-btn relative inline-flex items-center justify-center p-2 rounded-lg border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
+      class="theme-toggle-btn relative inline-flex items-center justify-center w-9 h-9 rounded-xl border transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer select-none"
       [class]="buttonClass()">
       
       @if (themeService.theme() === 'dark') {
         <!-- Sun icon to switch to Light -->
-        <span class="mat-icon text-[18px] text-amber-400 transition-transform duration-300 hover:rotate-45">
+        <span class="mat-icon text-[19px] text-amber-400 transition-transform duration-300 hover:rotate-45">
           light_mode
         </span>
         @if (showLabel()) {
@@ -26,7 +26,7 @@ import { ThemeService } from '../../../core/services/theme.service';
         }
       } @else {
         <!-- Moon icon to switch to Dark -->
-        <span class="mat-icon text-[18px] text-indigo-600 transition-transform duration-300 hover:-rotate-12">
+        <span class="mat-icon text-[19px] text-indigo-600 transition-transform duration-300 hover:-rotate-12">
           dark_mode
         </span>
         @if (showLabel()) {

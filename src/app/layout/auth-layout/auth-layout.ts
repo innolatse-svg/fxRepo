@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { LogoComponent } from '../../shared/components/logo/logo';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle';
 
 @Component({
   selector: 'app-auth-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, ThemeToggleComponent],
+  imports: [RouterOutlet, RouterLink, LogoComponent, ThemeToggleComponent],
   template: `
     <div class="min-h-screen flex flex-col justify-between bg-[#08080a] text-slate-200 relative overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-200">
       
@@ -18,33 +19,23 @@ import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme
 
       <!-- Minimalist Top Navigation Header -->
       <header class="w-full border-b border-slate-800/80 bg-[#0a0a0b]/80 backdrop-blur-md sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
           
           <!-- Brand Logo -->
-          <a routerLink="/" class="flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded p-1">
-            <div class="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center font-bold text-black text-xs italic tracking-tighter shadow-sm group-hover:bg-emerald-400 transition-colors">
-              FI
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-base sm:text-lg font-bold tracking-tight text-white uppercase font-sans">
-                Forex Intel
-              </span>
-              <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded text-[9px] font-bold tracking-widest uppercase border border-emerald-500/20">
-                PRO
-              </span>
-            </div>
-          </a>
+          <app-logo routerLink="/" badge="PRO" size="md"></app-logo>
 
           <!-- Right: Theme Switcher & Direct Link back to Landing Page -->
-          <div class="flex items-center gap-3">
-            <app-theme-toggle [variant]="'compact'"></app-theme-toggle>
-
-            <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded bg-[#141417] border border-slate-800 text-[10px] font-mono text-slate-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span class="text-slate-300">PASSERELLE SÉCURISÉE</span>
+          <div class="flex items-center gap-4">
+            <div class="flex items-center pr-1 border-r border-slate-800/80">
+              <app-theme-toggle [variant]="'compact'"></app-theme-toggle>
             </div>
 
-            <a routerLink="/" class="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-emerald-400 transition-colors px-3 py-1.5 rounded hover:bg-slate-900 border border-transparent hover:border-slate-800">
+            <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#141417] border border-slate-800 text-[10px] font-mono text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-slate-300 font-medium">PASSERELLE SÉCURISÉE</span>
+            </div>
+
+            <a routerLink="/" class="flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-emerald-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800/40 border border-transparent hover:border-slate-800">
               <span class="text-sm">←</span>
               <span>Retour à l'accueil</span>
             </a>
@@ -59,16 +50,18 @@ import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme
       </main>
 
       <!-- Minimalist Legal & Status Footer -->
-      <footer class="w-full border-t border-slate-800/80 bg-[#0a0a0b]/60 backdrop-blur-sm py-4 px-4 sm:px-8 text-center text-xs text-slate-400 font-mono flex flex-col sm:flex-row items-center justify-between gap-2 max-w-7xl mx-auto">
-        <div class="flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-          <span>Forex Intel &copy; 2026. Tous droits réservés.</span>
-        </div>
+      <footer class="w-full border-t border-slate-800/80 bg-[#0a0a0b]/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="text-slate-300 font-sans font-medium">Forex Intel &copy; 2026. Tous droits réservés.</span>
+          </div>
 
-        <div class="flex items-center gap-4 text-[11px] text-slate-400">
-          <span>Infrastructure Institutionnelle</span>
-          <span class="text-slate-700">&bull;</span>
-          <span>Protocoles MT5</span>
+          <div class="flex items-center gap-4 text-[11px] text-slate-400">
+            <span>Infrastructure Institutionnelle</span>
+            <span class="text-slate-700">&bull;</span>
+            <span>Protocoles MT5</span>
+          </div>
         </div>
       </footer>
 

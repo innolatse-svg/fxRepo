@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -22,12 +24,20 @@
     --color-text-muted: #64748b;
   }
 
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
   body {
     font-family: var(--font-sans);
     background-color: #0a0a0b;
     color: #E2E8F0;
     overflow-x: hidden;
     transition: background-color 0.25s ease, color 0.25s ease;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   html.light body, body.light {
@@ -37,38 +47,167 @@
 }
 
 /* ============================================================ */
+/* RESPONSIVE UTILITIES & FLUID TYPOGRAPHY                      */
+/* ============================================================ */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.text-fluid-metric {
+  font-size: clamp(1.35rem, 4vw, 1.875rem);
+  line-height: 1.15;
+}
+
+.text-fluid-hero {
+  font-size: clamp(1.85rem, 5vw, 3.25rem);
+  line-height: 1.1;
+}
+
+/* Utilities to hide scrollbars while preserving smooth scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.table-responsive-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================ */
 /* LIGHT MODE GLOBAL ADAPTATIONS                                */
 /* ============================================================ */
 html.light {
   color-scheme: light;
 }
 
+/* 1. Primary Page & Layout Backgrounds */
+html.light .bg-\[\#08080a\],
+html.light .bg-\[\#08080a\]\/95,
+html.light .bg-\[\#08080a\]\/90,
 html.light .bg-\[\#0a0a0b\],
 html.light .bg-\[\#0a0a0b\]\/95,
 html.light .bg-\[\#0a0a0b\]\/80,
-html.light .bg-\[\#0a0a0b\]\/90 {
+html.light .bg-\[\#0a0a0b\]\/90,
+html.light .bg-\[\#0a0a0b\]\/60,
+html.light .bg-\[\#0a0a0d\] {
   background-color: #f8fafc !important;
 }
 
-html.light .bg-\[\#0d0d0f\],
-html.light .bg-\[\#0f0f12\],
-html.light .bg-\[\#141417\],
-html.light .bg-\[\#121215\],
-html.light .bg-\[\#18181c\] {
+/* 2. Sidebar, Topbar & Floating Toolbars */
+html.light aside.bg-\[\#0c0c0f\],
+html.light .bg-\[\#0c0c0f\],
+html.light .bg-\[\#0e0e13\]\/90,
+html.light .bg-\[\#0e0e13\] {
   background-color: #ffffff !important;
+  color: #0f172a !important;
 }
 
+html.light header.bg-\[\#0c0c0f\]\/90,
+html.light .bg-\[\#0c0c0f\]\/90 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* 3. Primary Card Surfaces in Light Mode (Pure Clean White with subtle shadow) */
+html.light .bg-\[\#141417\],
+html.light .bg-\[\#141417\]\/90,
+html.light .bg-\[\#141417\]\/80,
+html.light .bg-\[\#121215\],
+html.light .bg-\[\#0f0f12\],
+html.light .bg-\[\#0f0f12\]\/80,
+html.light .bg-\[\#0f0f14\],
+html.light .bg-\[\#0e0e12\],
+html.light .bg-\[\#0d0d12\],
+html.light .bg-\[\#0c0c10\],
+html.light .bg-\[\#0d0d10\],
+html.light .bg-\[\#121217\],
+html.light .bg-\[\#14141a\],
+html.light .bg-\[\#16161a\],
+html.light .bg-\[\#18181c\],
+html.light .bg-\[\#0B0E14\],
+html.light .bg-\[\#0b0e14\] {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* 4. Sub-card, insets, pills & secondary surfaces in light mode (Slate-50 / Slate-100) */
+html.light .bg-\[\#0d0d0f\],
+html.light .bg-\[\#111115\],
+html.light .bg-\[\#101014\],
+html.light .bg-\[\#101015\],
+html.light .bg-\[\#121216\],
+html.light .bg-\[\#131317\],
+html.light .bg-\[\#141418\],
+html.light .bg-\[\#141419\],
+html.light .bg-\[\#15151b\],
+html.light .bg-\[\#15151c\],
+html.light .bg-\[\#16161b\],
+html.light .bg-\[\#16161d\],
+html.light .bg-\[\#16161e\],
+html.light .bg-\[\#17171d\],
+html.light .bg-\[\#181820\],
+html.light .bg-\[\#181822\],
+html.light .bg-\[\#191920\],
+html.light .bg-\[\#191922\],
+html.light .bg-\[\#1a1a1e\],
+html.light .bg-\[\#1c1c22\],
+html.light .bg-\[\#1e1e24\],
+html.light .bg-\[\#1e1e26\],
+html.light .bg-\[\#09090d\],
+html.light .bg-\[\#09090d\]\/80,
+html.light .bg-\[\#07070a\],
+html.light .bg-\[\#0e121a\],
+html.light .bg-\[\#090b10\],
+html.light .bg-\[\#080A0F\],
+html.light .bg-\[\#080a0f\],
 html.light .bg-slate-900,
 html.light .bg-slate-950 {
   background-color: #f1f5f9 !important;
 }
 
+html.light .bg-slate-800,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60 {
+  background-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+html.light .hover\:bg-slate-800:hover,
+html.light .hover\:bg-slate-800\/80:hover {
+  background-color: #cbd5e1 !important;
+}
+
+/* Selected item highlight */
+html.light .bg-\[\#121218\],
+html.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Interactive navigation and list hovers */
+html.light .hover\:bg-\[\#141419\]:hover,
+html.light aside nav a:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* 5. Borders in Light Mode */
 html.light .border-slate-800,
+html.light .border-slate-800\/90,
 html.light .border-slate-800\/80,
 html.light .border-slate-800\/60,
 html.light .border-slate-800\/50,
 html.light .border-slate-700,
-html.light .border-slate-700\/80 {
+html.light .border-slate-700\/80,
+html.light .border-slate-700\/60,
+html.light .border-slate-700\/50 {
   border-color: #e2e8f0 !important;
 }
 
@@ -76,15 +215,23 @@ html.light .border-slate-900 {
   border-color: #f1f5f9 !important;
 }
 
-/* Text adaptations in light mode */
+html.light .hover\:border-slate-700:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* 6. Text adaptations in light mode */
+html.light .text-white,
 html.light header .text-white,
 html.light h1.text-white,
 html.light h2.text-white,
 html.light h3.text-white,
-html.light .text-slate-100,
-html.light .text-slate-200,
-html.light article .text-white {
+html.light h4.text-white,
+html.light .text-slate-100 {
   color: #0f172a !important;
+}
+
+html.light .text-slate-200 {
+  color: #1e293b !important;
 }
 
 html.light .text-slate-300 {
@@ -99,17 +246,125 @@ html.light .text-slate-500 {
   color: #64748b !important;
 }
 
-/* Light mode card shadows */
-html.light app-card > div,
-html.light article,
-html.light .bg-\[\#141417\],
-html.light .bg-\[\#0f0f12\] {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+html.light strong.text-slate-200 {
+  color: #0f172a !important;
 }
 
-/* Inputs & Forms in Light Mode */
+/* 7. Color Accents (Emerald, Amber, Rose, Cyan, Indigo) in Light Mode */
+html.light .text-emerald-400 {
+  color: #059669 !important;
+}
+
+html.light .text-emerald-300 {
+  color: #047857 !important;
+}
+
+html.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+}
+
+html.light .bg-emerald-500\/15 {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+}
+
+html.light .bg-emerald-500\/20 {
+  background-color: rgba(16, 185, 129, 0.2) !important;
+}
+
+html.light .border-emerald-500\/20,
+html.light .border-emerald-500\/30,
+html.light .border-emerald-500\/40 {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+html.light .text-amber-400 {
+  color: #d97706 !important;
+}
+
+html.light .text-amber-300 {
+  color: #b45309 !important;
+}
+
+html.light .bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.12) !important;
+}
+
+html.light .bg-amber-500\/15 {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+}
+
+html.light .border-amber-500\/20,
+html.light .border-amber-500\/30 {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+html.light .text-rose-400 {
+  color: #e11d48 !important;
+}
+
+html.light .text-rose-500 {
+  color: #be123c !important;
+}
+
+html.light .bg-rose-500\/10 {
+  background-color: rgba(244, 63, 94, 0.12) !important;
+}
+
+html.light .bg-rose-500\/15 {
+  background-color: rgba(244, 63, 94, 0.15) !important;
+}
+
+html.light .bg-rose-500\/20 {
+  background-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+html.light .border-rose-500\/20,
+html.light .border-rose-500\/30,
+html.light .border-rose-500\/40 {
+  border-color: rgba(244, 63, 94, 0.4) !important;
+}
+
+html.light .text-cyan-400,
+html.light .text-cyan-300 {
+  color: #0891b2 !important;
+}
+
+html.light .bg-cyan-500\/10 {
+  background-color: rgba(6, 182, 212, 0.12) !important;
+}
+
+html.light .text-indigo-400,
+html.light .text-indigo-300 {
+  color: #4f46e5 !important;
+}
+
+html.light .bg-indigo-500\/10 {
+  background-color: rgba(99, 102, 241, 0.12) !important;
+}
+
+/* Badges & Chips using bg-slate-800 in Light Mode */
+html.light span.bg-slate-800:not(.text-cyan-300):not(.text-cyan-400):not(.text-emerald-300):not(.text-emerald-400):not(.text-amber-300):not(.text-amber-400):not(.text-rose-300):not(.text-rose-400),
+html.light .badge.bg-slate-800 {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+/* 8. Preserving White Text on Saturated Solid Buttons */
+html.light button.bg-rose-500,
+html.light button.bg-rose-600,
+html.light .bg-rose-500 .text-white,
+html.light .bg-rose-600 .text-white,
+html.light .bg-rose-600,
+html.light button.bg-emerald-600,
+html.light .bg-indigo-600,
+html.light .bg-cyan-600 {
+  color: #ffffff !important;
+}
+
+/* 9. Light Mode Form Controls & Select dropdowns */
 html.light input,
 html.light select,
+html.light select.bg-\[\#141419\],
 html.light textarea {
   background-color: #ffffff !important;
   color: #0f172a !important;
@@ -128,26 +383,31 @@ html.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-/* Buttons in Light Mode */
+html.light option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* 10. Secondary and Icon Buttons in Light Mode */
 html.light button.bg-slate-800,
-html.light .bg-slate-800 {
+html.light a.bg-slate-800 {
   background-color: #f1f5f9 !important;
   color: #1e293b !important;
+  border-color: #e2e8f0 !important;
 }
 
 html.light button.bg-slate-800:hover,
-html.light .bg-slate-800:hover {
+html.light a.bg-slate-800:hover {
   background-color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
-html.light button.bg-white,
-html.light .bg-white {
+html.light button.btn-inverse-light {
   background-color: #0f172a !important;
   color: #ffffff !important;
 }
 
-html.light button.bg-white:hover,
-html.light .bg-white:hover {
+html.light button.btn-inverse-light:hover {
   background-color: #1e293b !important;
 }
 
@@ -161,6 +421,84 @@ html.light .bg-emerald-500 {
 html.light button.bg-emerald-500:hover,
 html.light .bg-emerald-500:hover {
   background-color: #059669 !important;
+}
+
+/* 11. Modal, Drawer & Backdrop Overrides */
+html.light .bg-black\/80 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
+html.light .shadow-2xl.shadow-black,
+html.light .shadow-lg.shadow-black\/40,
+html.light .shadow-lg.shadow-black\/30,
+html.light .shadow-lg.shadow-black {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light .shadow-2xl.shadow-rose-950\/50 {
+  box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 12. SVG Chart adjustments in Light Mode */
+html.light .bg-\[\#090b10\],
+html.light .bg-\[\#08090d\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light svg line[stroke="#1e293b"],
+html.light svg line[stroke="#161c28"],
+html.light svg line[stroke="#1c2438"],
+html.light svg line[stroke="#1c1c22"],
+html.light svg line[stroke="#1e1e26"] {
+  stroke: #e2e8f0 !important;
+}
+
+html.light svg circle[stroke="#1e293b"],
+html.light svg circle[stroke="#161c28"] {
+  stroke: #e2e8f0 !important;
+}
+
+html.light svg line[stroke="#334155"] {
+  stroke: #cbd5e1 !important;
+}
+
+html.light svg text[fill="#64748b"],
+html.light svg text[fill="#64748B"] {
+  fill: #64748b !important;
+}
+
+html.light svg text[fill="#F8FAFC"] {
+  fill: #0f172a !important;
+}
+
+html.light svg rect[fill="#141A28"] {
+  fill: #e2e8f0 !important;
+}
+
+html.light svg text[fill="#475569"] {
+  fill: #94a3b8 !important;
+}
+
+html.light svg rect[fill="#1e293b"] {
+  fill: #0f172a !important;
+}
+
+/* Light mode card shadows */
+html.light app-card > div,
+html.light article,
+html.light .shadow-xl {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light .bg-\[\#141417\] {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+}
+
+/* Ticker & Interactive hover states */
+html.light .animate-ticker button:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
 }
 
 /* Custom Scrollbar */

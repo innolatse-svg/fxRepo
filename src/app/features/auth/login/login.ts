@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { MockUserStorageService } from '../../../core/services/mock-user-storage.service';
+import { OnboardingService } from '../../../core/services/onboarding.service';
 import { ButtonComponent } from '../../../shared/components/button/button';
+import { LogoComponent } from '../../../shared/components/logo/logo';
 
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, RouterLink, ButtonComponent],
+  imports: [ReactiveFormsModule, RouterLink, ButtonComponent, LogoComponent],
   template: `
     <div class="w-full max-w-5xl mx-auto">
       
@@ -26,13 +29,8 @@ import { ButtonComponent } from '../../../shared/components/button/button';
               MARKET INTELLIGENCE PLATFORM
             </div>
 
-            <div class="flex items-center gap-3">
-              <div class="w-9 h-9 bg-emerald-500 rounded flex items-center justify-center font-bold text-black text-sm italic tracking-tighter shadow-md">
-                FI
-              </div>
-              <h1 class="text-2xl font-bold tracking-tight text-white uppercase font-sans">
-                Forex Intel
-              </h1>
+            <div>
+              <app-logo routerLink="/" size="lg" badge="PRO"></app-logo>
             </div>
           </div>
 
@@ -106,13 +104,8 @@ import { ButtonComponent } from '../../../shared/components/button/button';
         <div class="lg:col-span-7 w-full max-w-md mx-auto lg:max-w-none">
           
           <!-- Mobile Brand Banner (Visible only on very small screens) -->
-          <div class="sm:hidden mb-6 text-center space-y-2">
-            <div class="inline-flex items-center justify-center w-10 h-10 bg-emerald-500 rounded font-bold text-black text-sm italic shadow-md">
-              FI
-            </div>
-            <h1 class="text-xl font-bold tracking-tight text-white uppercase font-sans">
-              Forex Intel
-            </h1>
+          <div class="sm:hidden mb-6 text-center space-y-2 flex flex-col items-center">
+            <app-logo routerLink="/" size="md" badge="PRO"></app-logo>
             <p class="text-xs text-slate-400">
               Plateforme d'Intelligence de Marché & Infrastructure Trading
             </p>
@@ -311,6 +304,9 @@ import { ButtonComponent } from '../../../shared/components/button/button';
 })
 export class LoginComponent {
   authService = inject(AuthService);
+  userStorage = inject(MockUserStorageService);
+  onboardingService = inject(OnboardingService);
+  router = inject(Router);
 
   showPassword = signal<boolean>(false);
   isSubmitted = signal<boolean>(false);
@@ -394,11 +390,22 @@ export class LoginComponent {
 
     const formVal = this.loginForm.getRawValue();
     
-    // Call AuthService abstraction (ready for Spring Boot POST /api/auth/login)
-    await this.authService.login({
+    // Call AuthService abstraction backed by MockUserStorageService
+    const response = await this.authService.login({
       email: formVal.email.trim(),
       password: formVal.password,
       rememberMe: formVal.rememberMe
     });
+
+    if (response.success) {
+      const activeUser = this.userStorage.getActiveUser();
+      this.onboardingService.loadFromUserStorage();
+
+      if (activeUser && !activeUser.onboardingCompleted) {
+        this.router.navigate(['/onboarding/welcome']);
+      } else {
+        this.router.navigate(['/app/dashboard']);
+      }
+    }
   }
 }

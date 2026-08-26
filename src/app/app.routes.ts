@@ -113,6 +113,64 @@ export const routes: Routes = [
     ]
   },
 
+  // Authenticated App Shell & Dashboard (/app)
+  {
+    path: 'app',
+    loadComponent: () => import('./layout/authenticated-layout/authenticated-layout').then(m => m.AuthenticatedLayoutComponent),
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/dashboard/dashboard').then(m => m.DashboardComponent),
+        title: 'Tableau de bord — Forex Intel'
+      },
+      {
+        path: 'market/:symbol',
+        loadComponent: () => import('./features/market/market').then(m => m.MarketComponent),
+        title: 'Analyse Détaillée de Marché — Forex Intel'
+      },
+      {
+        path: 'market',
+        loadComponent: () => import('./features/market/market').then(m => m.MarketComponent),
+        title: 'Surveillance Marché — Forex Intel'
+      },
+      {
+        path: 'signals',
+        loadComponent: () => import('./features/signals/signals').then(m => m.SignalsComponent),
+        title: 'Signaux & IA — Forex Intel'
+      },
+      {
+        path: 'risk',
+        loadComponent: () => import('./features/risk/risk').then(m => m.RiskComponent),
+        title: 'Gestion du Risque — Forex Intel'
+      },
+      {
+        path: 'accounts',
+        loadComponent: () => import('./features/accounts/accounts').then(m => m.AccountsComponent),
+        title: 'Comptes MT5 & Brokers — Forex Intel'
+      },
+      {
+        path: 'backtesting',
+        loadComponent: () => import('./features/backtesting/backtesting').then(m => m.BacktestingComponent),
+        title: 'Laboratoire Backtesting — Forex Intel'
+      },
+      {
+        path: 'calendar',
+        loadComponent: () => import('./features/calendar/calendar').then(m => m.CalendarComponent),
+        title: 'Calendrier Macro — Forex Intel'
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings').then(m => m.SettingsComponent),
+        title: 'Paramètres & Profil — Forex Intel'
+      },
+      {
+        path: '',
+        redirectTo: 'dashboard',
+        pathMatch: 'full'
+      }
+    ]
+  },
+
   // Fallback Catch-all
   {
     path: '**',

@@ -224,11 +224,11 @@ import { ButtonComponent } from '../../../shared/components/button/button';
         </form>
 
         <!-- Actions -->
-        <div class="flex items-center justify-between gap-4 pt-6 mt-6 border-t border-slate-800">
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3 pt-6 mt-6 border-t border-slate-800">
           <button
             type="button"
             (click)="goBack()"
-            class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+            class="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-800 bg-[#121216] sm:bg-transparent sm:border-transparent text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer text-center">
             ← Étape précédente
           </button>
 
@@ -270,6 +270,7 @@ export class OnboardingRiskManagementComponent implements OnInit {
   });
 
   ngOnInit() {
+    this.onboardingService.setStep(3);
     const saved = this.onboardingService.riskPreferences();
     this.riskForm.patchValue({
       maxRiskPerTradePct: saved.maxRiskPerTradePct,

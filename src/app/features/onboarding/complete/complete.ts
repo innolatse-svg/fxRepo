@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AUTOMATION_LEVELS, OnboardingService } from '../../../core/services/onboarding.service';
 import { ButtonComponent } from '../../../shared/components/button/button';
@@ -178,11 +178,15 @@ import { ButtonComponent } from '../../../shared/components/button/button';
   `,
   styles: ``
 })
-export class OnboardingCompleteComponent {
+export class OnboardingCompleteComponent implements OnInit {
   onboardingService = inject(OnboardingService);
   router = inject(Router);
 
   showModal = signal<boolean>(false);
+
+  ngOnInit() {
+    this.onboardingService.setStep(6);
+  }
 
   tradingPrefs = computed(() => this.onboardingService.tradingPreferences());
   riskPrefs = computed(() => this.onboardingService.riskPreferences());
@@ -204,7 +208,7 @@ export class OnboardingCompleteComponent {
 
   openCompletionModal() {
     this.onboardingService.completeOnboarding();
-    this.showModal.set(true);
+    this.router.navigate(['/app/dashboard']);
   }
 
   closeModal() {

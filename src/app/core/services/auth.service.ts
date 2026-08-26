@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { 
   AuthErrorState, 
   AuthResponse, 
@@ -8,19 +8,47 @@ import {
   RegisterRequest, 
   ResetPasswordRequest 
 } from '../models/auth.model';
+import { MockUserStorageService } from './mock-user-storage.service';
+import { MockUserRecord } from '../models/user-storage.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private userStorage = inject(MockUserStorageService);
+
   // Reactive Authentication State Signals
   readonly isLoading = signal<boolean>(false);
-  readonly currentUser = signal<AuthUser | null>(null);
   readonly lastAuthError = signal<AuthErrorState | null>(null);
   readonly demoFeedbackMessage = signal<string | null>(null);
 
+  // Computed signal directly backed by MockUserStorageService
+  readonly currentUser = computed<AuthUser | null>(() => {
+    const rawUser = this.userStorage.currentUser();
+    if (!rawUser) return null;
+    return this.mapMockUserToAuthUser(rawUser);
+  });
+
+  // Access the raw MockUserRecord if needed
+  readonly currentMockUser = computed<MockUserRecord | null>(() => {
+    return this.userStorage.currentUser();
+  });
+
   /**
-   * Authenticate user with credentials.
+   * Helper to map MockUserRecord into AuthUser
+   */
+  private mapMockUserToAuthUser(mockUser: MockUserRecord): AuthUser {
+    return {
+      id: mockUser.id,
+      email: mockUser.email,
+      name: `${mockUser.firstName} ${mockUser.lastName}`.trim() || mockUser.email.split('@')[0],
+      role: mockUser.subscription.plan === 'PRO' || mockUser.subscription.plan === 'PREMIUM' ? 'PRO_TRADER' : 'TRADER',
+      createdAt: mockUser.createdAt
+    };
+  }
+
+  /**
+   * Authenticate user with credentials using MockUserStorageService.
    * Architecture prepared for future Spring Boot endpoint: POST /api/auth/login
    */
   async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -28,25 +56,31 @@ export class AuthService {
     this.lastAuthError.set(null);
     this.demoFeedbackMessage.set(null);
 
-    // Simulate network latency / authentication handshake for frontend demonstration
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Simulate short network latency for realism
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     this.isLoading.set(false);
 
-    const user: AuthUser = {
-      id: 'demo-usr-01',
-      email: credentials.email,
-      name: credentials.email.split('@')[0] || 'Trader',
-      role: 'PRO_TRADER',
-      createdAt: new Date().toISOString()
-    };
+    const result = this.userStorage.login(credentials.email, credentials.password);
 
-    this.currentUser.set(user);
+    if (!result.success || !result.user) {
+      const errorMsg = result.error || 'Identifiants invalides';
+      this.lastAuthError.set({
+        type: 'INVALID_CREDENTIALS',
+        message: errorMsg
+      });
+      return {
+        success: false,
+        message: errorMsg
+      };
+    }
+
+    const authUser = this.mapMockUserToAuthUser(result.user);
 
     const response: AuthResponse = {
       success: true,
-      message: `Connexion validée pour ${credentials.email}. L'intégration API Spring Boot (POST /api/auth/login) sera branchée au backend.`,
-      user
+      message: `Connexion réussie pour ${authUser.name} (${authUser.email}).`,
+      user: authUser
     };
 
     this.demoFeedbackMessage.set(response.message || null);
@@ -54,7 +88,7 @@ export class AuthService {
   }
 
   /**
-   * Register a new user account and initiate trial.
+   * Register a new user account and initiate trial in MockUserStorageService.
    * Architecture prepared for future Spring Boot endpoint: POST /api/auth/register
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
@@ -62,25 +96,36 @@ export class AuthService {
     this.lastAuthError.set(null);
     this.demoFeedbackMessage.set(null);
 
-    // Simulate network latency for registration flow
-    await new Promise(resolve => setTimeout(resolve, 800));
+    // Simulate short network latency for registration flow
+    await new Promise(resolve => setTimeout(resolve, 600));
 
     this.isLoading.set(false);
 
-    const user: AuthUser = {
-      id: `usr-${Date.now().toString(36)}`,
+    const result = this.userStorage.register({
+      firstName: data.firstName,
+      lastName: data.lastName,
       email: data.email,
-      name: `${data.firstName} ${data.lastName}`.trim(),
-      role: 'PRO_TRADER',
-      createdAt: new Date().toISOString()
-    };
+      password: data.password
+    });
 
-    this.currentUser.set(user);
+    if (!result.success || !result.user) {
+      const errorMsg = result.error || 'Cet e-mail est déjà utilisé';
+      this.lastAuthError.set({
+        type: 'EMAIL_ALREADY_EXISTS',
+        message: errorMsg
+      });
+      return {
+        success: false,
+        message: errorMsg
+      };
+    }
+
+    const authUser = this.mapMockUserToAuthUser(result.user);
 
     const response: AuthResponse = {
       success: true,
-      message: `Compte initié avec succès pour ${user.name} (${data.email}). Période d'essai gratuit de 15 jours activée.`,
-      user
+      message: `Compte initié avec succès pour ${authUser.name} (${data.email}). Période d'essai gratuit de 15 jours activée.`,
+      user: authUser
     };
 
     this.demoFeedbackMessage.set(response.message || null);
@@ -96,7 +141,7 @@ export class AuthService {
     this.lastAuthError.set(null);
     this.demoFeedbackMessage.set(null);
 
-    await new Promise(resolve => setTimeout(resolve, 750));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     this.isLoading.set(false);
 
@@ -118,7 +163,7 @@ export class AuthService {
     this.lastAuthError.set(null);
     this.demoFeedbackMessage.set(null);
 
-    await new Promise(resolve => setTimeout(resolve, 800));
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     this.isLoading.set(false);
 
@@ -151,7 +196,7 @@ export class AuthService {
    * Log out current session
    */
   logout() {
-    this.currentUser.set(null);
+    this.userStorage.logout();
     this.lastAuthError.set(null);
     this.demoFeedbackMessage.set(null);
   }

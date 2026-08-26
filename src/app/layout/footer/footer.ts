@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LogoComponent } from '../../shared/components/logo/logo';
 
 @Component({
   selector: 'app-footer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, LogoComponent],
   template: `
     <footer class="bg-[#0a0a0b] border-t border-slate-800 text-slate-400 text-xs">
       <!-- Main Footer Content -->
@@ -13,14 +14,7 @@ import { RouterLink } from '@angular/router';
           
           <!-- Column 1: Brand & Identity -->
           <div class="lg:col-span-2 space-y-3">
-            <div class="flex items-center gap-2.5">
-              <div class="w-7 h-7 rounded bg-emerald-500 flex items-center justify-center text-black font-extrabold text-xs">
-                FX
-              </div>
-              <span class="font-extrabold tracking-wider text-base text-white uppercase">
-                FOREX<span class="text-emerald-400">INTEL</span>
-              </span>
-            </div>
+            <app-logo routerLink="/" size="md" badge="PRO"></app-logo>
 
             <p class="text-slate-400 text-xs leading-relaxed max-w-sm">
               Plateforme d'intelligence de marché, de synthèse multi-sources et d'orchestration du risque dédiée aux traders Forex professionnels.

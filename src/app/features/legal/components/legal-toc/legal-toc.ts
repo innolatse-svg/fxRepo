@@ -41,12 +41,12 @@ import { LegalSection } from '../../models/legal.model';
       </div>
 
       <!-- Quick Action / Switch Document Card -->
-      <div class="p-3.5 rounded-xl bg-[#141417]/80 border border-slate-800/80 text-[11px] text-slate-400 space-y-2">
-        <div class="flex items-center gap-1.5 text-slate-300 font-semibold font-mono text-[10px] uppercase">
+      <div class="p-4 rounded-xl bg-[#141417] border border-slate-800/80 shadow-sm text-xs space-y-2">
+        <div class="flex items-center gap-2 text-slate-200 font-semibold font-mono text-[11px] uppercase tracking-wider">
           <span class="mat-icon text-sm text-emerald-400">gavel</span>
           <span>Cadre contractuel</span>
         </div>
-        <p class="text-[11px] leading-relaxed text-slate-400">
+        <p class="text-xs leading-relaxed text-slate-400">
           Ce document forme avec nos autres politiques le socle contractuel régissant l'utilisation du service Forex Intel.
         </p>
       </div>

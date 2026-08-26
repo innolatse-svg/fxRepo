@@ -1,5 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { 
+  AutomationLevel,
   AutomationLevelDetails, 
   ForexPairOption, 
   OnboardingState, 
@@ -8,6 +9,8 @@ import {
   TradingPreferences, 
   AutomationPreferences 
 } from '../models/onboarding.model';
+import { MockUserStorageService } from './mock-user-storage.service';
+import { AutomationLevelCode, MockUserAccountRecord, MockUserPreferences } from '../models/user-storage.model';
 
 export const DEFAULT_FOREX_PAIRS: ForexPairOption[] = [
   { symbol: 'EUR/USD', name: 'Euro / US Dollar', category: 'MAJORS', description: 'La paire la plus liquide du marché mondial', spreadAvgPips: 0.2 },
@@ -23,10 +26,14 @@ export const DEFAULT_FOREX_PAIRS: ForexPairOption[] = [
 ];
 
 export const OTHER_UPCOMING_INSTRUMENTS = [
-  { symbol: 'XAU/USD', name: 'Gold Spot', type: 'COMMODITIES', note: 'Disponible au Level 3+' },
-  { symbol: 'US30', name: 'Dow Jones Index', type: 'INDICES', note: 'Intégration Pro' },
-  { symbol: 'NAS100', name: 'Nasdaq Index', type: 'INDICES', note: 'Intégration Pro' },
-  { symbol: 'BTC/USD', name: 'Bitcoin Spot', type: 'CRYPTO', note: 'Intégration Pro' }
+  { symbol: 'XAU/USD', name: 'Gold Spot / Dollar', type: 'MÉTAUX', note: 'Or au comptant & métal refuge', spreadAvg: '1.5 pts', ready: true },
+  { symbol: 'XAG/USD', name: 'Silver Spot / Dollar', type: 'MÉTAUX', note: 'Argent métal haute vélocité', spreadAvg: '2.0 pts', ready: true },
+  { symbol: 'US30', name: 'Dow Jones Industrial 30', type: 'INDICES', note: 'Indice Wall Street majeur', spreadAvg: '2.0 pts', ready: true },
+  { symbol: 'NAS100', name: 'Nasdaq 100 Tech', type: 'INDICES', note: 'Grandes capitalisations tech US', spreadAvg: '1.2 pts', ready: true },
+  { symbol: 'GER40', name: 'DAX 40 Allemagne', type: 'INDICES', note: 'Indice de référence européen', spreadAvg: '1.0 pt', ready: true },
+  { symbol: 'BTC/USD', name: 'Bitcoin / US Dollar', type: 'CRYPTO', note: 'Actif numérique haute volatilité', spreadAvg: '15 pts', ready: true },
+  { symbol: 'ETH/USD', name: 'Ethereum / US Dollar', type: 'CRYPTO', note: 'Smart contracts & DeFi liquidité', spreadAvg: '1.8 pts', ready: true },
+  { symbol: 'WTI/USD', name: 'US Oil (Crude WTI)', type: 'COMMODITIES', note: 'Pétrole brut américain', spreadAvg: '3.0 pts', ready: true }
 ];
 
 export const AUTOMATION_LEVELS: AutomationLevelDetails[] = [
@@ -82,30 +89,30 @@ export const AUTOMATION_LEVELS: AutomationLevelDetails[] = [
 export const INITIAL_ONBOARDING_STATE: OnboardingState = {
   currentStepIndex: 1,
   tradingPreferences: {
-    authorizedForexPairs: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CAD'],
+    authorizedForexPairs: ['EUR/USD', 'GBP/USD', 'USD/JPY'],
     otherInstruments: []
   },
   riskPreferences: {
     maxRiskPerTradePct: 1.0,
     maxDailyLossPct: 3.0,
     maxOpenPositions: 3,
-    maxSimultaneousExposurePct: 6.0
+    maxSimultaneousExposurePct: 4.0
   },
   tradingAccounts: [
     {
-      id: 'acc-demo-preview',
-      brokerName: 'IC Markets / Pepperstone (Exemple)',
-      server: 'ICMarketsSC-Demo02',
-      accountNumber: '8942105',
+      id: 'acc-deriv-01',
+      brokerName: 'Deriv / MT5 Sandbox',
+      server: 'Deriv-Demo',
+      accountNumber: '5082194',
       accountType: 'DEMO',
-      status: 'SAMPLE',
-      activeForExecution: false,
+      status: 'CONNECTED',
+      activeForExecution: true,
       currency: 'USD',
       balanceDemo: 10000
     }
   ],
   automationPreferences: {
-    selectedLevel: 1,
+    selectedLevel: 2,
     manualConfirmationRequired: true,
     maxDailyTradesAllowed: 4
   },
@@ -116,6 +123,8 @@ export const INITIAL_ONBOARDING_STATE: OnboardingState = {
   providedIn: 'root'
 })
 export class OnboardingService {
+  private userStorage = inject(MockUserStorageService);
+
   // In-memory reactive state signal
   readonly state = signal<OnboardingState>(INITIAL_ONBOARDING_STATE);
 
@@ -126,6 +135,64 @@ export class OnboardingService {
   readonly tradingAccounts = computed(() => this.state().tradingAccounts);
   readonly automationPreferences = computed(() => this.state().automationPreferences);
   readonly isCompleted = computed(() => this.state().isCompleted);
+
+  constructor() {
+    this.loadFromUserStorage();
+  }
+
+  /**
+   * Load active user preferences from MockUserStorageService
+   */
+  loadFromUserStorage() {
+    const user = this.userStorage.getActiveUser();
+    if (!user) return;
+
+    const prefs = user.preferences;
+    if (!prefs) return;
+
+    // Convert level code to number
+    let levelNum: AutomationLevel = 2;
+    if (prefs.automation.level === 'ANALYSIS') levelNum = 1;
+    else if (prefs.automation.level === 'SIGNALS') levelNum = 2;
+    else if (prefs.automation.level === 'PAPER_TRADING') levelNum = 3;
+    else if (prefs.automation.level === 'DEMO_AUTO') levelNum = 4;
+    else if (prefs.automation.level === 'LIVE_AUTO') levelNum = 5;
+
+    const accounts: TradingAccountOption[] = (prefs.tradingAccounts || []).map(acc => ({
+      id: acc.id,
+      brokerName: acc.broker,
+      server: acc.server,
+      accountNumber: acc.accountNumber,
+      accountType: acc.environment,
+      status: 'CONNECTED',
+      activeForExecution: acc.tradingEnabled,
+      currency: 'USD',
+      balanceDemo: 10000
+    }));
+
+    this.state.set({
+      currentStepIndex: user.onboardingCompleted ? 6 : 1,
+      tradingPreferences: {
+        authorizedForexPairs: prefs.selectedPairs?.length ? prefs.selectedPairs : ['EUR/USD', 'GBP/USD', 'USD/JPY'],
+        otherInstruments: []
+      },
+      riskPreferences: {
+        maxRiskPerTradePct: prefs.riskRules?.riskPerTradePercent ?? 1.0,
+        maxDailyLossPct: prefs.riskRules?.maxDailyLossPercent ?? 3.0,
+        maxOpenPositions: prefs.riskRules?.maxOpenPositions ?? 3,
+        maxSimultaneousExposurePct: prefs.riskRules?.maxExposurePercent ?? 4.0,
+        newsFilterActive: prefs.riskRules?.newsFilterActive ?? true,
+        weekendLockActive: prefs.riskRules?.weekendLockActive ?? false
+      },
+      tradingAccounts: accounts.length > 0 ? accounts : INITIAL_ONBOARDING_STATE.tradingAccounts,
+      automationPreferences: {
+        selectedLevel: levelNum,
+        manualConfirmationRequired: prefs.automation?.manualConfirmation ?? true,
+        maxDailyTradesAllowed: prefs.automation?.maxDailyTrades ?? 4
+      },
+      isCompleted: user.onboardingCompleted
+    });
+  }
 
   /**
    * Update Trading Preferences
@@ -159,6 +226,53 @@ export class OnboardingService {
         }
       };
     });
+  }
+
+  /**
+   * Toggle Other Option Instrument authorization (Metals, Indices, Crypto)
+   */
+  toggleOtherInstrument(symbol: string) {
+    this.state.update(current => {
+      const existing = current.tradingPreferences.otherInstruments || [];
+      const isSelected = existing.includes(symbol);
+      const updated = isSelected 
+        ? existing.filter(p => p !== symbol)
+        : [...existing, symbol];
+      
+      return {
+        ...current,
+        tradingPreferences: {
+          ...current.tradingPreferences,
+          otherInstruments: updated
+        }
+      };
+    });
+  }
+
+  /**
+   * Select all other option instruments
+   */
+  selectAllOtherInstruments() {
+    this.state.update(current => ({
+      ...current,
+      tradingPreferences: {
+        ...current.tradingPreferences,
+        otherInstruments: OTHER_UPCOMING_INSTRUMENTS.map(i => i.symbol)
+      }
+    }));
+  }
+
+  /**
+   * Clear all other option instruments
+   */
+  clearAllOtherInstruments() {
+    this.state.update(current => ({
+      ...current,
+      tradingPreferences: {
+        ...current.tradingPreferences,
+        otherInstruments: []
+      }
+    }));
   }
 
   /**
@@ -239,7 +353,54 @@ export class OnboardingService {
   }
 
   /**
-   * Mark onboarding as completed
+   * Convert local state to MockUserPreferences and persist to MockUserStorageService
+   */
+  saveToStorage(): boolean {
+    const current = this.state();
+
+    let levelCode: AutomationLevelCode = 'ANALYSIS';
+    if (current.automationPreferences.selectedLevel === 2) levelCode = 'SIGNALS';
+    else if (current.automationPreferences.selectedLevel === 3) levelCode = 'PAPER_TRADING';
+    else if (current.automationPreferences.selectedLevel === 4) levelCode = 'DEMO_AUTO';
+    else if (current.automationPreferences.selectedLevel === 5) levelCode = 'LIVE_AUTO';
+
+    const accounts: MockUserAccountRecord[] = current.tradingAccounts.map(a => ({
+      id: a.id,
+      broker: a.brokerName,
+      server: a.server,
+      accountNumber: a.accountNumber,
+      environment: a.accountType,
+      tradingEnabled: a.activeForExecution
+    }));
+
+    const allSelected = Array.from(new Set([
+      ...(current.tradingPreferences.authorizedForexPairs || []),
+      ...(current.tradingPreferences.otherInstruments || [])
+    ]));
+
+    const prefs: MockUserPreferences = {
+      selectedPairs: allSelected,
+      riskRules: {
+        riskPerTradePercent: current.riskPreferences.maxRiskPerTradePct,
+        maxDailyLossPercent: current.riskPreferences.maxDailyLossPct,
+        maxOpenPositions: current.riskPreferences.maxOpenPositions,
+        maxExposurePercent: current.riskPreferences.maxSimultaneousExposurePct,
+        newsFilterActive: current.riskPreferences.newsFilterActive ?? true,
+        weekendLockActive: current.riskPreferences.weekendLockActive ?? false
+      },
+      automation: {
+        level: levelCode,
+        manualConfirmation: current.automationPreferences.manualConfirmationRequired,
+        maxDailyTrades: current.automationPreferences.maxDailyTradesAllowed ?? 4
+      },
+      tradingAccounts: accounts
+    };
+
+    return this.userStorage.updateOnboardingPreferences(prefs);
+  }
+
+  /**
+   * Mark onboarding as completed and persist to mock JSON storage
    */
   completeOnboarding() {
     this.state.update(current => ({
@@ -247,6 +408,8 @@ export class OnboardingService {
       isCompleted: true,
       completedAt: new Date().toISOString()
     }));
+
+    this.saveToStorage();
   }
 
   /**
