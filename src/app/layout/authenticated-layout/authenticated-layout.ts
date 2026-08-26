@@ -5,8 +5,12 @@ import { AuthService } from '../../core/services/auth.service';
 import { MockUserStorageService } from '../../core/services/mock-user-storage.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { OnboardingService } from '../../core/services/onboarding.service';
+import { NotificationsService } from '../../core/services/notifications.service';
+import { NetworkService } from '../../core/services/network.service';
 import { LogoComponent } from '../../shared/components/logo/logo';
 import { ThemeToggleComponent } from '../../shared/components/theme-toggle/theme-toggle';
+import { NetworkBannerComponent } from '../../shared/components/network-banner/network-banner';
+import { SessionModalComponent } from '../../shared/components/session-modal/session-modal';
 
 interface NavItem {
   label: string;
@@ -19,8 +23,19 @@ interface NavItem {
 @Component({
   selector: 'app-authenticated-layout',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LogoComponent, ThemeToggleComponent],
+  imports: [
+    RouterOutlet, 
+    RouterLink, 
+    RouterLinkActive, 
+    LogoComponent, 
+    ThemeToggleComponent, 
+    NetworkBannerComponent, 
+    SessionModalComponent
+  ],
   template: `
+    <!-- Top Network Status Banner -->
+    <app-network-banner></app-network-banner>
+
     <div class="h-screen w-full flex overflow-hidden bg-[#08080a] text-slate-200 font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
       
       <!-- ============================================================ -->
@@ -79,7 +94,7 @@ interface NavItem {
 
         <!-- SIDEBAR NAVIGATION MENU -->
         <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-1.5" aria-label="Navigation principale">
-          @for (item of navItems; track item.route) {
+          @for (item of computedNavItems(); track item.route) {
             <a 
               [routerLink]="item.route"
               routerLinkActive="bg-emerald-500/10 text-emerald-400 border-emerald-500/40 font-semibold shadow-sm"
@@ -213,6 +228,20 @@ interface NavItem {
               <span class="text-slate-400">/ {{ dashboardService.metrics().maxExposureLimitPct }}%</span>
             </div>
 
+            <!-- Topbar Notification Bell -->
+            <a 
+              id="topbar-notifications-btn"
+              routerLink="/app/notifications"
+              class="relative p-2 rounded-xl bg-[#141419] border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 transition-colors flex items-center justify-center"
+              title="Centre de notifications">
+              <span class="mat-icon text-lg text-slate-300">notifications</span>
+              @if (notificationsService.unreadCount() > 0) {
+                <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 text-black text-[9px] font-mono font-bold flex items-center justify-center animate-pulse">
+                  {{ notificationsService.unreadCount() }}
+                </span>
+              }
+            </a>
+
             <!-- EMERGENCY STOP BUTTON -->
             @if (dashboardService.emergencyStopActive()) {
               <button 
@@ -293,6 +322,14 @@ interface NavItem {
                   </a>
 
                   <a 
+                    routerLink="/app/notifications" 
+                    (click)="closeUserMenu()"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all">
+                    <span class="mat-icon text-amber-400 text-[18px]">notifications</span>
+                    <span>Notifications & Alertes</span>
+                  </a>
+
+                  <a 
                     routerLink="/app/risk" 
                     (click)="closeUserMenu()"
                     class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all">
@@ -353,6 +390,11 @@ interface NavItem {
       </div>
 
     </div>
+
+    <!-- ============================================================ -->
+    <!-- SESSION EXPIRED / RENEWAL MODAL                              -->
+    <!-- ============================================================ -->
+    <app-session-modal></app-session-modal>
 
     <!-- ============================================================ -->
     <!-- EMERGENCY STOP CONFIRMATION MODAL                             -->
@@ -417,6 +459,8 @@ export class AuthenticatedLayoutComponent {
   mockUserStorage = inject(MockUserStorageService);
   dashboardService = inject(DashboardService);
   onboardingService = inject(OnboardingService);
+  notificationsService = inject(NotificationsService);
+  networkService = inject(NetworkService);
   router = inject(Router);
   mainContent = viewChild<ElementRef<HTMLElement>>('mainContent');
 
@@ -478,16 +522,26 @@ export class AuthenticatedLayoutComponent {
     return 'FI';
   });
 
-  navItems: NavItem[] = [
-    { label: 'Vue d\'ensemble', route: '/app/dashboard', icon: 'dashboard' },
-    { label: 'Surveillance Marché', route: '/app/market', icon: 'candlestick_chart' },
-    { label: 'Signaux & IA', route: '/app/signals', icon: 'psychology', badge: 'LIVE', badgeColor: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' },
-    { label: 'Gestion du Risque', route: '/app/risk', icon: 'shield' },
-    { label: 'Comptes MT5 & Brokers', route: '/app/accounts', icon: 'account_balance' },
-    { label: 'Laboratoire Backtesting', route: '/app/backtesting', icon: 'science' },
-    { label: 'Calendrier Macro', route: '/app/calendar', icon: 'calendar_today' },
-    { label: 'Paramètres & Profil', route: '/app/settings', icon: 'settings' }
-  ];
+  readonly computedNavItems = computed<NavItem[]>(() => {
+    const unread = this.notificationsService.unreadCount();
+    return [
+      { label: 'Vue d\'ensemble', route: '/app/dashboard', icon: 'dashboard' },
+      { label: 'Surveillance Marché', route: '/app/market', icon: 'candlestick_chart' },
+      { label: 'Signaux & IA', route: '/app/signals', icon: 'psychology', badge: 'LIVE', badgeColor: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' },
+      { label: 'Gestion du Risque', route: '/app/risk', icon: 'shield' },
+      { label: 'Comptes MT5 & Brokers', route: '/app/accounts', icon: 'account_balance' },
+      { label: 'Laboratoire Backtesting', route: '/app/backtesting', icon: 'science' },
+      { label: 'Calendrier Macro', route: '/app/calendar', icon: 'calendar_today' },
+      { 
+        label: 'Notifications', 
+        route: '/app/notifications', 
+        icon: 'notifications', 
+        badge: unread > 0 ? `${unread}` : undefined,
+        badgeColor: 'bg-emerald-500 text-black font-bold'
+      },
+      { label: 'Paramètres & Profil', route: '/app/settings', icon: 'settings' }
+    ];
+  });
 
   toggleSidebarCollapse() {
     this.sidebarCollapsed.update(v => !v);

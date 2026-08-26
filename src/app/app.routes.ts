@@ -159,6 +159,11 @@ export const routes: Routes = [
         title: 'Calendrier Macro — Forex Intel'
       },
       {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications').then(m => m.NotificationsComponent),
+        title: 'Notifications & Alertes — Forex Intel'
+      },
+      {
         path: 'settings',
         loadComponent: () => import('./features/settings/settings').then(m => m.SettingsComponent),
         title: 'Paramètres & Profil — Forex Intel'
@@ -171,10 +176,16 @@ export const routes: Routes = [
     ]
   },
 
-  // Fallback Catch-all
+  // 404 Route & Fallback Catch-all
+  {
+    path: '404',
+    loadComponent: () => import('./features/not-found/not-found').then(m => m.NotFoundComponent),
+    title: '404 Page Non Trouvée — Forex Intel'
+  },
   {
     path: '**',
-    redirectTo: ''
+    loadComponent: () => import('./features/not-found/not-found').then(m => m.NotFoundComponent),
+    title: '404 Page Non Trouvée — Forex Intel'
   }
 ];
 
