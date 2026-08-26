@@ -8,11 +8,27 @@
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     --color-bg-base: #0a0a0b;
-    --color-bg-card: #141417;
+    --color-bg-card: #111622;
     --color-bg-subtle: #0d0d0f;
-    --color-border: rgba(51, 65, 85, 0.6);
+    --color-border: #1E2638;
     --color-text-main: #f8fafc;
     --color-text-muted: #94a3b8;
+
+    /* Semantic Design System Theme Variables (Dark Theme - Default) */
+    --bg-surface: #0B0E14;
+    --bg-card: #111622;
+    --bg-card-inner: #161B26;
+    --border-color: #1E2638;
+    --border-accent: rgba(0, 230, 153, 0.3);
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --accent-emerald: #00E699;
+    --accent-cyan: #38BDF8;
+    --badge-bg: rgba(0, 230, 153, 0.15);
+    --badge-text: #00E699;
+    --badge-border: rgba(0, 230, 153, 0.35);
+    --progress-track: #0B0E14;
+    --progress-track-border: #1E2638;
   }
 
   html.light, body.light {
@@ -22,6 +38,22 @@
     --color-border: #e2e8f0;
     --color-text-main: #0f172a;
     --color-text-muted: #64748b;
+
+    /* Semantic Design System Theme Variables (Light Theme) */
+    --bg-surface: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --bg-card-inner: #F1F5F9;
+    --border-color: #E2E8F0;
+    --border-accent: rgba(5, 150, 105, 0.35);
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --accent-emerald: #059669;
+    --accent-cyan: #0284C7;
+    --badge-bg: rgba(5, 150, 105, 0.12);
+    --badge-text: #047857;
+    --badge-border: rgba(5, 150, 105, 0.3);
+    --progress-track: #E2E8F0;
+    --progress-track-border: #CBD5E1;
   }
 
   html, body {
@@ -136,6 +168,29 @@ html.light .bg-\[\#0B0E14\],
 html.light .bg-\[\#0b0e14\] {
   background-color: #ffffff !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Settings Tabs in Light Mode */
+html.light .bg-\[\#101014\] {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html.light .bg-\[\#101014\]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light .hover\:bg-\[\#15151c\]:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html.light .bg-emerald-500\/15.text-emerald-400 {
+  background-color: rgba(16, 185, 129, 0.12) !important;
+  color: #047857 !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
 }
 
 /* 4. Sub-card, insets, pills & secondary surfaces in light mode (Slate-50 / Slate-100) */
@@ -604,5 +659,77 @@ html.light .glow-ambient-emerald {
 .animate-ticker:hover {
   animation-play-state: paused;
 }
+
+/* ============================================================ */
+/* SUBSCRIPTION & QUOTAS THEMED COMPONENT STYLES                */
+/* ============================================================ */
+.subscription-plan-card {
+  background-color: var(--bg-card);
+  border-color: var(--border-accent);
+  color: var(--text-primary);
+}
+
+.plan-title {
+  color: var(--text-primary) !important;
+}
+
+.plan-subtitle {
+  color: var(--text-secondary) !important;
+}
+
+.section-header-label {
+  color: var(--text-primary) !important;
+}
+
+.subscription-badge {
+  background-color: var(--badge-bg);
+  color: var(--badge-text) !important;
+  border-color: var(--badge-border);
+}
+
+.subscription-progress-box {
+  background-color: var(--bg-card-inner);
+  border-color: var(--border-color);
+}
+
+.plan-label {
+  color: var(--text-secondary) !important;
+}
+
+.plan-progress-value {
+  color: var(--accent-emerald) !important;
+}
+
+.subscription-progress-track {
+  background-color: var(--progress-track);
+  border-color: var(--progress-track-border);
+}
+
+.quota-metric-card {
+  background-color: var(--bg-card-inner);
+  border-color: var(--border-color);
+}
+
+.quota-card-label {
+  color: var(--text-secondary) !important;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.quota-card-value {
+  color: var(--text-primary) !important;
+  font-weight: 700;
+}
+
+.quota-card-accent-emerald {
+  color: var(--accent-emerald) !important;
+  font-weight: 700;
+}
+
+.quota-card-accent-cyan {
+  color: var(--accent-cyan) !important;
+  font-weight: 700;
+}
+
 
 

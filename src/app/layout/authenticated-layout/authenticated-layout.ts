@@ -112,22 +112,25 @@ interface NavItem {
           
           @if (!sidebarCollapsed()) {
             <!-- Subscription Pro Trial Widget -->
-            <div class="p-3 rounded-xl bg-[#121217] border border-slate-800/90 text-left space-y-2">
+            <div class="p-3 rounded-xl subscription-progress-box border text-left space-y-2.5 shadow-sm">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="font-bold text-white flex items-center gap-1.5">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="font-bold plan-title flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50"></span>
                   Essai {{ subscriptionPlan() }} Actif
                 </span>
-                <span class="font-mono text-emerald-400 font-bold">{{ trialDaysRemaining() }}j restants</span>
+                <span class="font-mono plan-progress-value font-bold">{{ trialDaysRemaining() }}j restants</span>
               </div>
               
-              <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                <div class="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full w-[85%] rounded-full"></div>
+              <div class="w-full subscription-progress-track h-2 rounded-full overflow-hidden p-0.5 border shadow-inner">
+                <div 
+                  class="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 h-full rounded-full transition-all duration-500 shadow-sm shadow-emerald-500/50"
+                  [style.width.%]="trialProgressPercent()">
+                </div>
               </div>
               
-              <div class="text-[10px] text-slate-400 flex items-center justify-between">
-                <span class="truncate max-w-[130px]">{{ userName() }}</span>
-                <span class="text-emerald-400 font-bold uppercase text-[9px]">{{ subscriptionPlan() }}</span>
+              <div class="text-[10px] plan-subtitle flex items-center justify-between">
+                <span class="truncate max-w-[130px] font-medium">{{ userName() }}</span>
+                <span class="subscription-badge font-bold uppercase text-[9px] font-mono px-1.5 py-0.5 rounded border">{{ subscriptionPlan() }}</span>
               </div>
             </div>
           }
@@ -282,8 +285,9 @@ interface NavItem {
 
                   <a 
                     routerLink="/app/settings" 
-                    (click)="closeUserMenu()"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-emerald-500/10 hover:border-emerald-500/20 border border-transparent transition-all">
+                    [queryParams]="{ tab: 'profile' }"
+                    (click)="navigateToSettings('profile')"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-emerald-500/10 hover:border-emerald-500/20 border border-transparent transition-all cursor-pointer">
                     <span class="mat-icon text-emerald-400 text-[18px]">manage_accounts</span>
                     <span class="font-medium">Mon Profil / Paramètres</span>
                   </a>
@@ -423,7 +427,15 @@ export class AuthenticatedLayoutComponent {
         if (!event.url.includes('#')) {
           const el = this.mainContent()?.nativeElement;
           if (el) {
-            el.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            try {
+              if (typeof el.scrollTo === 'function') {
+                el.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+              } else {
+                el.scrollTop = 0;
+              }
+            } catch {
+              el.scrollTop = 0;
+            }
           }
         }
       });
@@ -449,6 +461,10 @@ export class AuthenticatedLayoutComponent {
   subscriptionPlan = computed(() => this.currentMockUser()?.subscription.plan || 'PRO');
 
   trialDaysRemaining = computed(() => this.currentMockUser()?.subscription.trialDaysRemaining ?? 15);
+  trialProgressPercent = computed(() => {
+    const days = this.trialDaysRemaining();
+    return Math.min(100, Math.max(0, Math.round((days / 30) * 100)));
+  });
 
   userInitials = computed(() => {
     const name = this.userName();
@@ -491,6 +507,15 @@ export class AuthenticatedLayoutComponent {
 
   closeUserMenu() {
     this.userMenuOpen.set(false);
+  }
+
+  navigateToSettings(tab?: string) {
+    this.closeUserMenu();
+    if (tab) {
+      this.router.navigate(['/app/settings'], { queryParams: { tab } });
+    } else {
+      this.router.navigate(['/app/settings']);
+    }
   }
 
   openEmergencyModal() {

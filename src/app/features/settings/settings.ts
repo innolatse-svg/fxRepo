@@ -60,14 +60,14 @@ const POPULAR_BROKERS: BrokerOption[] = [
         <!-- Quick DB sync badge & action buttons -->
         <div class="flex items-center flex-wrap gap-2.5">
           @if (hasUnsavedChanges()) {
-            <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono font-semibold flex items-center gap-1.5 animate-pulse">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-              Modifications non enregistrées
+            <span class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold flex items-center gap-2 shadow-sm animate-pulse">
+              <span class="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/80"></span>
+              <span>Modifications non enregistrées</span>
             </span>
           } @else {
-            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-semibold flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-              Synchronisé avec la Base JSON
+            <span class="px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-semibold flex items-center gap-2 shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/80"></span>
+              <span>Paramètres synchronisés</span>
             </span>
           }
 
@@ -75,16 +75,19 @@ const POPULAR_BROKERS: BrokerOption[] = [
             type="button" 
             (click)="resetDraftToSaved()"
             [disabled]="!hasUnsavedChanges()"
-            class="px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5">
-            <span class="mat-icon text-[16px]">undo</span>
+            class="px-3.5 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs font-semibold text-slate-300 hover:text-white border border-slate-700/60 transition-all cursor-pointer flex items-center gap-1.5 min-h-[40px] focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <span class="mat-icon text-[18px]">undo</span>
             <span>Annuler</span>
           </button>
 
           <button 
             type="button" 
             (click)="saveAllChanges()"
-            class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-1.5 cursor-pointer hover:scale-[1.02]">
-            <span class="mat-icon text-[16px]">save</span>
+            [class]="hasUnsavedChanges() 
+              ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-400/40 hover:scale-[1.02] active:scale-[0.98]' 
+              : 'bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-md shadow-emerald-950/40 hover:scale-[1.01] active:scale-[0.99]'"
+            class="px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer min-h-[40px] focus:outline-none focus:ring-2 focus:ring-emerald-400">
+            <span class="mat-icon text-[19px]">save</span>
             <span>Enregistrer les modifications</span>
           </button>
         </div>
@@ -863,16 +866,16 @@ const POPULAR_BROKERS: BrokerOption[] = [
         <div class="space-y-6 animate-in fade-in duration-150">
           
           <!-- Plan Status Card -->
-          <div class="p-6 rounded-2xl bg-gradient-to-br from-[#0e0e15] to-[#141420] border border-emerald-500/30 space-y-6">
+          <div class="p-6 rounded-2xl subscription-plan-card border space-y-6 shadow-sm">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div class="space-y-1">
-                <div class="flex items-center gap-2">
-                  <span class="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-bold uppercase">
+              <div class="space-y-1.5">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <span class="px-2.5 py-0.5 rounded-lg text-xs font-mono font-bold uppercase subscription-badge border">
                     Licence Active
                   </span>
-                  <h2 class="text-xl font-bold text-white">Essai Gratuit Pro Trader</h2>
+                  <h2 class="text-xl font-bold plan-title">Essai Gratuit Pro Trader</h2>
                 </div>
-                <p class="text-xs text-slate-400">
+                <p class="text-xs plan-subtitle leading-relaxed max-w-2xl">
                   Accès complet aux modèles d'intelligence de marché, passerelles MT5 et risk engine institutionnel.
                 </p>
               </div>
@@ -880,58 +883,61 @@ const POPULAR_BROKERS: BrokerOption[] = [
               <button 
                 type="button" 
                 (click)="openUpgradeModal()"
-                class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 cursor-pointer hover:scale-105">
+                class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center gap-2 cursor-pointer hover:scale-105 shrink-0">
                 <span class="mat-icon text-[17px]">star</span>
                 <span>Passer au Forfait Pro Annuel</span>
               </button>
             </div>
 
-            <!-- Progress Bar -->
-            <div class="space-y-2 p-4 rounded-xl bg-[#09090d]/80 border border-slate-800">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-300 font-medium">Validité de la période d'essai :</span>
-                <span class="text-emerald-400 font-bold font-mono">15 jours restants / 30 jours</span>
+            <!-- Progress Bar & Trial Status -->
+            <div class="space-y-2.5 p-4 rounded-xl subscription-progress-box border shadow-inner">
+              <div class="flex items-center justify-between text-xs flex-wrap gap-2">
+                <span class="plan-label font-medium">Validité de la période d'essai :</span>
+                <span class="plan-progress-value font-bold font-mono">{{ trialDaysRemaining() }} jours restants / 30 jours ({{ trialProgressPercent() }}%)</span>
               </div>
-              <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                <div class="bg-gradient-to-r from-emerald-500 to-cyan-500 h-full w-[50%] rounded-full"></div>
+              <div class="w-full subscription-progress-track h-2.5 rounded-full overflow-hidden p-0.5 border shadow-inner">
+                <div 
+                  class="bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 h-full rounded-full transition-all duration-500 shadow-sm shadow-emerald-500/50"
+                  [style.width.%]="trialProgressPercent()">
+                </div>
               </div>
             </div>
 
             <!-- Quotas Comparison Table -->
             <div class="space-y-3">
-              <span class="text-xs font-bold text-white uppercase tracking-wider block">
+              <span class="text-xs font-bold uppercase tracking-wider block section-header-label">
                 Quotas & Capacités Incluses
               </span>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-                <div class="p-3.5 rounded-xl bg-[#121217] border border-slate-800 space-y-1">
-                  <div class="text-slate-400 text-[11px]">Passerelles MT5 connectées</div>
-                  <div class="text-white font-bold text-sm font-mono">{{ draftAccounts().length }} / 5 comptes</div>
+                <div class="p-3.5 rounded-xl quota-metric-card border space-y-1">
+                  <div class="quota-card-label">Passerelles MT5 connectées</div>
+                  <div class="quota-card-value font-mono text-sm">{{ draftAccounts().length }} / 5 comptes</div>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-[#121217] border border-slate-800 space-y-1">
-                  <div class="text-slate-400 text-[11px]">Instruments autorisés</div>
-                  <div class="text-white font-bold text-sm font-mono">{{ draftSelectedPairs().length }} / 20 actifs</div>
+                <div class="p-3.5 rounded-xl quota-metric-card border space-y-1">
+                  <div class="quota-card-label">Instruments autorisés</div>
+                  <div class="quota-card-value font-mono text-sm">{{ draftSelectedPairs().length }} / 20 actifs</div>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-[#121217] border border-slate-800 space-y-1">
-                  <div class="text-slate-400 text-[11px]">Moteur d'analyse IA & Deep Intel</div>
-                  <div class="text-emerald-400 font-bold text-sm font-mono">Illimité (Pro)</div>
+                <div class="p-3.5 rounded-xl quota-metric-card border space-y-1">
+                  <div class="quota-card-label">Moteur d'analyse IA & Deep Intel</div>
+                  <div class="quota-card-accent-emerald font-mono text-sm">Illimité (Pro)</div>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-[#121217] border border-slate-800 space-y-1">
-                  <div class="text-slate-400 text-[11px]">Latence moyenne de routage</div>
-                  <div class="text-cyan-400 font-bold text-sm font-mono">&lt; 20 ms Ultra-Fast</div>
+                <div class="p-3.5 rounded-xl quota-metric-card border space-y-1">
+                  <div class="quota-card-label">Latence moyenne de routage</div>
+                  <div class="quota-card-accent-cyan font-mono text-sm">&lt; 20 ms Ultra-Fast</div>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-[#121217] border border-slate-800 space-y-1">
-                  <div class="text-slate-400 text-[11px]">Coupe-circuit d'urgence</div>
-                  <div class="text-emerald-400 font-bold text-sm font-mono">Garantie 0ms</div>
+                <div class="p-3.5 rounded-xl quota-metric-card border space-y-1">
+                  <div class="quota-card-label">Coupe-circuit d'urgence</div>
+                  <div class="quota-card-accent-emerald font-mono text-sm">Garantie 0ms</div>
                 </div>
 
-                <div class="p-3.5 rounded-xl bg-[#121217] border border-slate-800 space-y-1">
-                  <div class="text-slate-400 text-[11px]">Calendrier Macro Institutional</div>
-                  <div class="text-white font-bold text-sm font-mono">Flux Temps Réel</div>
+                <div class="p-3.5 rounded-xl quota-metric-card border space-y-1">
+                  <div class="quota-card-label">Calendrier Macro Institutional</div>
+                  <div class="quota-card-value font-mono text-sm">Flux Temps Réel</div>
                 </div>
               </div>
             </div>
@@ -1176,6 +1182,11 @@ export class SettingsComponent implements OnInit {
 
   // Computed properties
   currentUser = computed(() => this.userStorage.currentUser());
+  trialDaysRemaining = computed(() => this.currentUser()?.subscription.trialDaysRemaining ?? 15);
+  trialProgressPercent = computed(() => {
+    const days = this.trialDaysRemaining();
+    return Math.min(100, Math.max(0, Math.round((days / 30) * 100)));
+  });
 
   filteredForexPairs = computed(() => {
     const q = this.pairSearchQuery().toLowerCase().trim();

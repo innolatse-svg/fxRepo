@@ -6,6 +6,7 @@ import {
   OnChanges,
   OnDestroy,
   OnInit,
+  PLATFORM_ID,
   SimpleChanges,
   ViewChild,
   computed,
@@ -13,7 +14,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { CommonModule, DecimalPipe } from '@angular/common';
+import { CommonModule, DecimalPipe, isPlatformBrowser } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { Candle, TimeframeType } from '../../../core/models/market-intelligence.model';
 import { MarketDemoService } from '../../../core/services/market-demo.service';
@@ -486,6 +487,8 @@ export interface SupportResistanceLevel {
 export class FinancialChart implements OnInit, OnChanges, OnDestroy {
   private readonly marketDemoService = inject(MarketDemoService);
   private readonly themeService = inject(ThemeService);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly isBrowser = isPlatformBrowser(this.platformId);
 
   @ViewChild('chartWrapper', { static: true }) chartWrapperRef!: ElementRef<HTMLDivElement>;
   @ViewChild('chartCanvas', { static: true }) chartCanvasRef!: ElementRef<HTMLCanvasElement>;
@@ -575,7 +578,9 @@ export class FinancialChart implements OnInit, OnChanges, OnDestroy {
     effect(() => {
       // Re-render when theme changes between dark and light
       this.themeService.theme();
-      this.scheduleRender();
+      if (this.isBrowser) {
+        this.scheduleRender();
+      }
     });
   }
 
@@ -586,21 +591,27 @@ export class FinancialChart implements OnInit, OnChanges, OnDestroy {
       this.showFvg.set(false);
       this.showStructure.set(false);
     }
-    this.initCanvasAndObserver();
+    if (this.isBrowser) {
+      this.initCanvasAndObserver();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['symbol'] || changes['candles']) {
-      this.scheduleRender();
+      if (this.isBrowser) {
+        this.scheduleRender();
+      }
     }
   }
 
   ngOnDestroy() {
-    if (this.animationFrameId !== null) {
+    if (this.animationFrameId !== null && typeof cancelAnimationFrame !== 'undefined') {
       cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+      this.resizeObserver = null;
     }
   }
 
@@ -667,28 +678,32 @@ export class FinancialChart implements OnInit, OnChanges, OnDestroy {
   // CANVAS INITIALIZATION & RESIZE OBSERVER
   // ====================================================================
   private initCanvasAndObserver() {
+    if (!this.isBrowser) return;
     const canvas = this.chartCanvasRef?.nativeElement;
     const wrapper = this.chartWrapperRef?.nativeElement;
     if (!canvas || !wrapper) return;
 
     this.ctx = canvas.getContext('2d', { alpha: false });
 
-    this.resizeObserver = new ResizeObserver(() => {
-      this.resizeCanvas();
-      this.scheduleRender();
-    });
-    this.resizeObserver.observe(wrapper);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.resizeCanvas();
+        this.scheduleRender();
+      });
+      this.resizeObserver.observe(wrapper);
+    }
 
     this.resizeCanvas();
     this.scheduleRender();
   }
 
   private resizeCanvas() {
+    if (!this.isBrowser) return;
     const canvas = this.chartCanvasRef?.nativeElement;
     const wrapper = this.chartWrapperRef?.nativeElement;
     if (!canvas || !wrapper) return;
 
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
     const rect = wrapper.getBoundingClientRect();
     const width = Math.max(rect.width, 280);
     const height = Math.max(rect.height, 260);
@@ -817,7 +832,9 @@ export class FinancialChart implements OnInit, OnChanges, OnDestroy {
   // MAIN RENDERING PIPELINE (60 FPS ACCELERATED CANVAS)
   // ====================================================================
   private scheduleRender() {
+    if (!this.isBrowser) return;
     if (this.animationFrameId !== null) return;
+    if (typeof requestAnimationFrame === 'undefined') return;
     this.animationFrameId = requestAnimationFrame(() => {
       this.animationFrameId = null;
       this.render();
@@ -825,7 +842,7 @@ export class FinancialChart implements OnInit, OnChanges, OnDestroy {
   }
 
   private render() {
-    if (!this.ctx || !this.chartWrapperRef) return;
+    if (!this.isBrowser || !this.ctx || !this.chartWrapperRef) return;
     const ctx = this.ctx;
     const rect = this.chartWrapperRef.nativeElement.getBoundingClientRect();
     const width = rect.width;

@@ -126,13 +126,19 @@ export class LegalTocComponent {
   onLinkClick(event: MouseEvent, sectionId: string) {
     event.preventDefault();
     this.mobileTocOpen.set(false);
+    if (typeof document === 'undefined') return;
     const element = document.getElementById(sectionId);
     if (element) {
       const yOffset = -90; // offset for sticky header
-      const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      const pageY = typeof window !== 'undefined' ? (window.pageYOffset || window.scrollY || 0) : 0;
+      const y = element.getBoundingClientRect().top + pageY + yOffset;
+      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
       // Update browser URL hash without jump
-      history.pushState(null, '', '#' + sectionId);
+      if (typeof history !== 'undefined' && typeof history.pushState === 'function') {
+        history.pushState(null, '', '#' + sectionId);
+      }
     }
   }
 }
