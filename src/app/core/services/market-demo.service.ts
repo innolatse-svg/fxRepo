@@ -13,6 +13,21 @@ import {
   MarketBias
 } from '../models/market-intelligence.model';
 
+export interface LiveQuoteMessage {
+  symbol: string;
+  bid: number;
+  ask: number;
+  spread?: number;
+  change24h?: number;
+  high24h?: number;
+  low24h?: number;
+  bias?: MarketBias;
+  trend?: 'STRONG_BUY' | 'BUY' | 'NEUTRAL' | 'SELL' | 'STRONG_SELL';
+  aiConfidence?: number;
+  lastTickDirection?: 'UP' | 'DOWN' | 'NEUTRAL';
+  sparkline?: number[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -1036,7 +1051,7 @@ export class MarketDemoService {
     if (!this.isBrowser) return;
 
     // Abonnement direct au topic STOMP émis par le Backend Spring Boot
-    this.websocketService.subscribe<any[]>('/topic/quotes').subscribe({
+    this.websocketService.subscribe<LiveQuoteMessage[]>('/topic/quotes').subscribe({
       next: (quotes) => {
         if (!this.isLiveStreaming() || !Array.isArray(quotes) || quotes.length === 0) return;
 

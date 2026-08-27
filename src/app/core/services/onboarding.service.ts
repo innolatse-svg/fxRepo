@@ -12,7 +12,6 @@ import {
   AutomationPreferences 
 } from '../models/onboarding.model';
 import { MockUserStorageService } from './mock-user-storage.service';
-import { AutomationLevelCode, MockUserAccountRecord, MockUserPreferences } from '../models/user-storage.model';
 
 export const DEFAULT_FOREX_PAIRS: ForexPairOption[] = [
   { symbol: 'EUR/USD', name: 'Euro / US Dollar', category: 'MAJORS', description: 'La paire la plus liquide du marché mondial', spreadAvgPips: 0.2 },

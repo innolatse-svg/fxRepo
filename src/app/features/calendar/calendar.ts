@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { CalendarService, EconomicEvent, EventImpact } from '../../core/services/calendar.service';
+import { CalendarService, EconomicEvent } from '../../core/services/calendar.service';
 
 export const INITIAL_EVENTS: EconomicEvent[] = [
   {

@@ -6,7 +6,7 @@
  * @date 2026-08-26
  */
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -70,11 +70,15 @@ export class RiskEngineService {
       // Actualise les logs après chaque évaluation
       this.fetchAuditLogs();
       return result;
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const httpErr = e as HttpErrorResponse;
+      const msg = (httpErr.error && typeof httpErr.error === 'object' && 'message' in httpErr.error)
+        ? String(httpErr.error.message)
+        : 'Erreur de communication avec le Risk Engine backend.';
       const fallback: RiskEvaluationResult = {
         decision: 'REJECTED',
         allowed: false,
-        reason: e.error?.message || 'Erreur de communication avec le Risk Engine backend.',
+        reason: msg,
         effectiveRiskPct: 1.0,
         appliedCeiling: 'COMMUNICATION_FAILURE',
         maxAllowedLotSize: 0.0
@@ -96,7 +100,7 @@ export class RiskEngineService {
       this.auditLogs.set(logs || []);
       this.isLoadingLogs.set(false);
       return logs;
-    } catch (e) {
+    } catch {
       this.isLoadingLogs.set(false);
       return [];
     }

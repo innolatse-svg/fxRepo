@@ -36,7 +36,7 @@ export class WebSocketService implements OnDestroy {
   private stompClient: Client | null = null;
   private messageSubject = new Subject<{ topic: string; payload: unknown }>();
   private seqCounter = 0;
-  private latencyIntervalId: any = null;
+  private latencyIntervalId: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     if (this.isBrowser) {
@@ -61,11 +61,8 @@ export class WebSocketService implements OnDestroy {
       connectHeaders: {
         Authorization: token ? `Bearer ${token}` : ''
       },
-      debug: (msg: string) => {
-        // Log désactivé en production pour performance
-        if (!environment.production) {
-          // console.debug('[STOMP]', msg);
-        }
+      debug: () => {
+        // Debug logger disabled
       },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
@@ -123,7 +120,7 @@ export class WebSocketService implements OnDestroy {
         this.seqCounter++;
         this.packetsReceivedCount.update(c => c + 1);
         this.messageSubject.next({ topic, payload });
-      } catch (e) {
+      } catch {
         console.warn(`[STOMP] Format de trame non-JSON reçu sur ${topic}`, message.body);
       }
     });

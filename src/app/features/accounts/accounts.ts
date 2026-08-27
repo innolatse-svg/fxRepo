@@ -2,7 +2,8 @@ import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } 
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
-import { TradingAccountService, TradingAccountResponse } from '../../core/services/trading-account.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { TradingAccountService } from '../../core/services/trading-account.service';
 import { AuthService } from '../../core/services/auth.service';
 
 export interface MT5AccountExtended {
@@ -519,9 +520,13 @@ export class AccountsComponent implements OnInit {
       this.accountForm.reset({ accountType: 'DEMO' });
       this.isSubmitting.set(false);
       this.openAddAccountModal.set(false);
-    } catch (e: any) {
+    } catch (e: unknown) {
       this.isSubmitting.set(false);
-      this.errorMessage.set(e.error?.message || 'Erreur lors de la liaison du compte broker');
+      const httpErr = e as HttpErrorResponse;
+      const msg = (httpErr.error && typeof httpErr.error === 'object' && 'message' in httpErr.error)
+        ? String(httpErr.error.message)
+        : 'Erreur lors de la liaison du compte broker';
+      this.errorMessage.set(msg);
     }
   }
 }

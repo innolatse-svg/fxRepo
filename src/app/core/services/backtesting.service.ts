@@ -41,6 +41,12 @@ export interface BacktestTradeItem {
   duration: string;
 }
 
+export interface StrategyInfo {
+  id: string;
+  name: string;
+  description: string;
+}
+
 export interface BacktestResult {
   strategyId: string;
   strategyName: string;
@@ -79,9 +85,9 @@ export class BacktestingService {
   /**
    * Récupère la liste des stratégies disponibles
    */
-  async getStrategies(): Promise<any[]> {
+  async getStrategies(): Promise<StrategyInfo[]> {
     return await firstValueFrom(
-      this.http.get<any[]>(`${this.apiUrl}/strategies`)
+      this.http.get<StrategyInfo[]>(`${this.apiUrl}/strategies`)
     );
   }
 }

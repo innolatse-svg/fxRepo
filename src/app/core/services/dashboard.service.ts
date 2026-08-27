@@ -151,6 +151,29 @@ export const INITIAL_OPEN_POSITIONS: OpenPosition[] = [
   }
 ];
 
+export interface ServerMetricsResponse {
+  accountBalance?: number;
+  dailyProfitDollar?: number;
+  dailyProfitPct?: number;
+  currentExposurePct?: number;
+  consumedDailyLossPct?: number;
+}
+
+export interface BackendSignalItem {
+  id?: string;
+  symbol: string;
+  direction: 'BUY' | 'SELL';
+  timeframe?: string;
+  alignmentScore?: number;
+  entryPrice: number;
+  stopLoss: number;
+  takeProfit: number;
+  riskRewardRatio?: string;
+  status?: 'PENDING_CONFIRMATION' | 'EXECUTED_DEMO' | 'CANCELLED';
+  timestamp?: string;
+  confluence?: TradeSignal['confluence'];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -164,7 +187,7 @@ export class DashboardService {
 
   // Active simulated capital & state
   readonly baseCapital = signal<number>(10000);
-  readonly serverMetrics = signal<any | null>(null);
+  readonly serverMetrics = signal<ServerMetricsResponse | null>(null);
   readonly emergencyStopActive = signal<boolean>(false);
   readonly emergencyStopReason = signal<string | null>(null);
   readonly lastExecutionError = signal<string | null>(null);
@@ -195,7 +218,7 @@ export class DashboardService {
    */
   async fetchSignals(): Promise<void> {
     try {
-      const data = await firstValueFrom(this.http.get<any[]>(`${environment.apiUrl}/signals`));
+      const data = await firstValueFrom(this.http.get<BackendSignalItem[]>(`${environment.apiUrl}/signals`));
       if (data && data.length > 0) {
         const mapped: TradeSignal[] = data.map(item => this.mapBackendSignalToModel(item));
         this.signals.set(mapped);
@@ -209,7 +232,7 @@ export class DashboardService {
    * Écoute en temps réel les nouveaux signaux poussés par le Moteur IA via WebSocket
    */
   private initSignalsWebSocket(): void {
-    this.websocketService.subscribe<any>('/topic/signals').subscribe((newSignal: any) => {
+    this.websocketService.subscribe<BackendSignalItem>('/topic/signals').subscribe((newSignal: BackendSignalItem) => {
       if (newSignal) {
         const mapped = this.mapBackendSignalToModel(newSignal);
         this.signals.update(list => {
@@ -221,7 +244,7 @@ export class DashboardService {
     });
   }
 
-  private mapBackendSignalToModel(item: any): TradeSignal {
+  private mapBackendSignalToModel(item: BackendSignalItem): TradeSignal {
     return {
       id: item.id || `sig-${Date.now()}`,
       symbol: item.symbol,
@@ -270,7 +293,7 @@ export class DashboardService {
    */
   async fetchMetrics(): Promise<void> {
     try {
-      const data = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/dashboard/metrics`));
+      const data = await firstValueFrom(this.http.get<ServerMetricsResponse>(`${environment.apiUrl}/dashboard/metrics`));
       if (data) {
         this.serverMetrics.set(data);
         if (data.accountBalance) {

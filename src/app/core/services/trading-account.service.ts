@@ -52,7 +52,7 @@ export class TradingAccountService {
       this.accounts.set(list || []);
       this.isLoading.set(false);
       return list || [];
-    } catch (e) {
+    } catch {
       this.isLoading.set(false);
       return [];
     }

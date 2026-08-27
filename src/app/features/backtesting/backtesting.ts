@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
 import { DecimalPipe, SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { BacktestingService, BacktestResult, BacktestTradeItem, EquityPoint } from '../../core/services/backtesting.service';
+import { BacktestingService, BacktestResult } from '../../core/services/backtesting.service';
 
 export interface BacktestStrategyConfig {
   id: string;
