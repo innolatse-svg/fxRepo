@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { OnboardingService } from '../../core/services/onboarding.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { RiskEngineService } from '../../core/services/risk-engine.service';
 
 export interface AuditLogItem {
   id: string;
@@ -268,9 +269,31 @@ export const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
               </div>
             </div>
 
-            <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
-              <span class="mat-icon text-sm">verified</span>
-              <span>Paramètre 100% conforme aux règles prop firm</span>
+            <div class="pt-2 border-t border-slate-800/80 flex flex-col gap-2">
+              <button 
+                type="button"
+                (click)="evaluateCurrentRiskIntent()"
+                class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-black font-bold text-xs font-mono transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                <span class="mat-icon text-sm">shield</span>
+                <span>Évaluer avec le Risk Engine Backend</span>
+              </button>
+
+              @if (evaluationStatus() === 'ALLOWED') {
+                <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+                  <span class="mat-icon text-sm">verified</span>
+                  <span>{{ evaluationFeedback() }}</span>
+                </div>
+              } @else if (evaluationStatus() === 'REJECTED') {
+                <div class="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-[11px] font-mono text-rose-400 flex items-center gap-1.5">
+                  <span class="mat-icon text-sm">gpp_bad</span>
+                  <span>{{ evaluationFeedback() }}</span>
+                </div>
+              } @else {
+                <div class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+                  <span class="mat-icon text-sm">verified</span>
+                  <span>Paramètre 100% conforme aux règles prop firm</span>
+                </div>
+              }
             </div>
 
           </div>
@@ -425,7 +448,7 @@ export const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
               [class.text-black]="auditFilter() === 'ALL'"
               [class.font-bold]="auditFilter() === 'ALL'"
               class="px-2.5 py-1 rounded-lg text-slate-300 transition-colors">
-              Tous ({{ auditLogs.length }})
+              Tous ({{ auditLogs().length }})
             </button>
             <button 
               type="button"
@@ -504,9 +527,10 @@ export const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
     </div>
   `
 })
-export class RiskComponent {
+export class RiskComponent implements OnInit {
   onboardingService = inject(OnboardingService);
   dashboardService = inject(DashboardService);
+  riskEngineService = inject(RiskEngineService);
 
   readonly riskPrefs = computed(() => this.onboardingService.riskPreferences());
   readonly metrics = computed(() => this.dashboardService.metrics());
@@ -517,14 +541,35 @@ export class RiskComponent {
   readonly calcRiskPct = signal<number>(1.0);
   readonly calcSlPips = signal<number>(25);
 
-  // Audit Logs State
-  readonly auditLogs = INITIAL_AUDIT_LOGS;
+  // Evaluation Feedback Signal
+  readonly evaluationFeedback = signal<string | null>(null);
+  readonly evaluationStatus = signal<'NONE' | 'ALLOWED' | 'REJECTED'>('NONE');
+
+  // Audit Logs State (Backend REST API)
   readonly auditFilter = signal<'ALL' | 'AUTHORIZED' | 'REJECTED'>('ALL');
+
+  readonly auditLogs = computed<AuditLogItem[]>(() => {
+    const serverLogs = this.riskEngineService.auditLogs();
+    if (serverLogs && serverLogs.length > 0) {
+      return serverLogs.map(l => ({
+        id: l.id,
+        time: new Date(l.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+        symbol: l.symbol,
+        type: (l.actionType === 'BUY' || l.actionType === 'SELL' ? l.actionType : 'BUY') as 'BUY' | 'SELL',
+        lots: l.lotSize,
+        status: (l.decision === 'ALLOWED' ? 'AUTHORIZED' : 'REJECTED') as 'AUTHORIZED' | 'REJECTED',
+        reason: l.reason,
+        ruleCategory: 'RISK_PER_TRADE' as const
+      }));
+    }
+    return INITIAL_AUDIT_LOGS;
+  });
 
   readonly filteredAuditLogs = computed(() => {
     const f = this.auditFilter();
-    if (f === 'ALL') return this.auditLogs;
-    return this.auditLogs.filter(a => a.status === f);
+    const logs = this.auditLogs();
+    if (f === 'ALL') return logs;
+    return logs.filter(a => a.status === f);
   });
 
   // Calculator Computeds
@@ -540,7 +585,7 @@ export class RiskComponent {
     let pipValuePerLot = 10; // Standard USD pair (EUR/USD, GBP/USD, AUD/USD)
     if (pair === 'USD/JPY') pipValuePerLot = 6.45;
     else if (pair === 'USD/CAD') pipValuePerLot = 7.40;
-    else if (pair === 'XAU/USD') pipValuePerLot = 10; // 0.10$ per 0.1 move = 10$ / 1$ move per lot
+    else if (pair === 'XAU/USD') pipValuePerLot = 10;
     else if (pair === 'BTC/USD') pipValuePerLot = 1;
 
     const lots = riskDollar / (slPips * pipValuePerLot);
@@ -554,23 +599,48 @@ export class RiskComponent {
     return Number((notional / capital).toFixed(1));
   });
 
+  ngOnInit(): void {
+    this.riskEngineService.fetchAuditLogs();
+  }
+
+  /**
+   * Évalue l'intention de calcul de lot en direct auprès du Risk Engine Spring Boot
+   */
+  async evaluateCurrentRiskIntent(): Promise<void> {
+    const result = await this.riskEngineService.evaluateTrade({
+      symbol: this.calcPair(),
+      direction: 'BUY',
+      lotSize: this.calculatedLotSize(),
+      requestedRiskPct: this.calcRiskPct(),
+      stopLoss: 1.0800,
+      accountBalance: this.calcCapital()
+    });
+
+    this.evaluationStatus.set(result.decision === 'ALLOWED' ? 'ALLOWED' : 'REJECTED');
+    this.evaluationFeedback.set(result.reason);
+  }
+
   onCalcCapitalChange(e: Event) {
     const val = Number((e.target as HTMLInputElement).value);
     this.calcCapital.set(val > 0 ? val : 10000);
+    this.evaluationStatus.set('NONE');
   }
 
   onCalcPairChange(e: Event) {
     const val = (e.target as HTMLSelectElement).value;
     this.calcPair.set(val);
+    this.evaluationStatus.set('NONE');
   }
 
   onCalcRiskChange(e: Event) {
     const val = Number((e.target as HTMLInputElement).value);
     this.calcRiskPct.set(val);
+    this.evaluationStatus.set('NONE');
   }
 
   onCalcSlPipsChange(e: Event) {
     const val = Number((e.target as HTMLInputElement).value);
     this.calcSlPips.set(val > 0 ? val : 20);
+    this.evaluationStatus.set('NONE');
   }
 }

@@ -27,7 +27,10 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: 'TRADER' | 'PRO_TRADER' | 'ADMIN';
+  role: 'TRADER' | 'PRO_TRADER' | 'ADMIN' | 'SUPER_ADMIN';
+  subscriptionPlan: 'FREE_TRIAL' | 'STARTER' | 'PRO' | 'LIFETIME_UNLIMITED';
+  subscriptionStatus: 'ACTIVE' | 'EXPIRED' | 'CANCELLED';
+  trialEndsAt?: string;
   createdAt: string;
 }
 
@@ -52,4 +55,3 @@ export interface AuthErrorState {
   type: AuthErrorType;
   message: string;
 }
-

@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { WebSocketService } from './websocket.service';
 import { 
   CurrencyPairQuote, 
   PillarScore, 
@@ -18,6 +19,7 @@ import {
 export class MarketDemoService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
+  private readonly websocketService = inject(WebSocketService);
 
   // Live streaming status
   readonly isLiveStreaming = signal<boolean>(true);
@@ -1027,80 +1029,56 @@ export class MarketDemoService {
   }
 
   /**
-   * Initializes high-frequency live market tick generator (every 1.5s)
-   * and background periodic sync with real APIs (every 25s)
+   * Initialise la réception en temps réel des cotations de marché
+   * via le flux WebSocket STOMP (/topic/quotes) du backend Spring Boot.
    */
   private initLiveTickEngine(): void {
     if (!this.isBrowser) return;
 
-    // Background real API sync every 25 seconds
-    setInterval(() => {
-      if (this.isLiveStreaming()) {
-        this.fetchRealMarketData();
-        this.fetchCandlesForPair(this.activePairSymbol(), this.selectedTimeframe());
-      }
-    }, 25000);
+    // Abonnement direct au topic STOMP émis par le Backend Spring Boot
+    this.websocketService.subscribe<any[]>('/topic/quotes').subscribe({
+      next: (quotes) => {
+        if (!this.isLiveStreaming() || !Array.isArray(quotes) || quotes.length === 0) return;
 
-    // Realistic Micro-Tick generator every 1.5s
-    setInterval(() => {
-      if (!this.isLiveStreaming()) return;
+        this.tickCounter.update(c => c + 1);
+        const nowStr = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const activeSym = this.activePairSymbol();
+        const activeTf = this.selectedTimeframe();
 
-      this.tickCounter.update(c => c + 1);
-      const nowStr = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const activeSym = this.activePairSymbol();
-      const activeTf = this.selectedTimeframe();
+        this.pairs.update(currentPairs => {
+          return currentPairs.map(p => {
+            const incoming = quotes.find(q => q.symbol === p.symbol);
+            if (!incoming) return p;
 
-      this.pairs.update(currentPairs => {
-        return currentPairs.map(p => {
-          // Micro variance based on asset type
-          const isGold = p.symbol === 'XAU/USD';
-          const isBtc = p.symbol === 'BTC/USD';
-          const isJpy = p.symbol === 'USD/JPY';
+            const newBid = Number(incoming.bid);
+            const newAsk = Number(incoming.ask);
+            const tickDir = incoming.lastTickDirection || (newBid >= p.bid ? 'UP' : 'DOWN');
+            const spark = incoming.sparkline || [...p.sparkline.slice(1), newBid];
 
-          let delta = 0;
-          if (isBtc) {
-            // ~$1.5 to $8.0 fluctuation for BTC
-            delta = (Math.random() - 0.48) * 8.5;
-          } else if (isGold) {
-            // ~$0.10 to $0.40 fluctuation for Gold
-            delta = (Math.random() - 0.48) * 0.45;
-          } else if (isJpy) {
-            // ~0.005 to 0.02 fluctuation for JPY
-            delta = (Math.random() - 0.49) * 0.015;
-          } else {
-            // ~0.00003 to 0.00008 for EUR/USD, GBP/USD, AUD/USD
-            delta = (Math.random() - 0.49) * 0.00008;
-          }
+            if (p.symbol === activeSym) {
+              this.updateLiveCandleTick(activeSym, activeTf, newBid, p.digits);
+            }
 
-          const rawNewBid = Math.max(0.00001, p.bid + delta);
-          const newBid = Number(rawNewBid.toFixed(p.digits));
-          const spreadPip = p.spread * (p.symbol === 'USD/JPY' ? 0.01 : p.digits === 5 ? 0.0001 : 1);
-          const newAsk = Number((newBid + spreadPip).toFixed(p.digits));
-
-          const tickDir = delta > 0 ? 'UP' : delta < 0 ? 'DOWN' : 'NEUTRAL';
-          const spark = [...p.sparkline];
-          // Keep sparkline updated
-          if (spark.length > 12) {
-            spark.shift();
-          }
-          spark.push(newBid);
-
-          // Update active live candle in real time
-          if (p.symbol === activeSym) {
-            this.updateLiveCandleTick(activeSym, activeTf, newBid, p.digits);
-          }
-
-          return {
-            ...p,
-            bid: newBid,
-            ask: newAsk,
-            lastTickDirection: tickDir,
-            sparkline: spark,
-            lastUpdated: nowStr
-          };
+            return {
+              ...p,
+              bid: newBid,
+              ask: newAsk,
+              spread: incoming.spread ?? p.spread,
+              change24h: incoming.change24h ?? p.change24h,
+              high24h: incoming.high24h ?? p.high24h,
+              low24h: incoming.low24h ?? p.low24h,
+              bias: incoming.bias ?? p.bias,
+              trend: incoming.trend ?? p.trend,
+              aiConfidence: incoming.aiConfidence ?? p.aiConfidence,
+              lastTickDirection: tickDir,
+              sparkline: spark,
+              lastUpdated: nowStr
+            };
+          });
         });
-      });
-    }, 1500);
+      },
+      error: (err) => console.warn('[MarketService] Erreur flux WebSocket:', err)
+    });
   }
 
   /**

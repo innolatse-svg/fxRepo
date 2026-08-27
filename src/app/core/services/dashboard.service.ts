@@ -1,7 +1,12 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { OnboardingService } from './onboarding.service';
 import { MarketDemoService } from './market-demo.service';
+import { WebSocketService } from './websocket.service';
+import { RiskEngineService } from './risk-engine.service';
 import { TradeSignal, OpenPosition } from '../models/dashboard.model';
+import { environment } from '../../../environments/environment';
 
 export const INITIAL_SIGNALS: TradeSignal[] = [
   {
@@ -150,13 +155,19 @@ export const INITIAL_OPEN_POSITIONS: OpenPosition[] = [
   providedIn: 'root'
 })
 export class DashboardService {
+  private http = inject(HttpClient);
   private onboardingService = inject(OnboardingService);
   private marketDemoService = inject(MarketDemoService);
+  private websocketService = inject(WebSocketService);
+
+  private riskEngineService = inject(RiskEngineService);
 
   // Active simulated capital & state
   readonly baseCapital = signal<number>(10000);
+  readonly serverMetrics = signal<any | null>(null);
   readonly emergencyStopActive = signal<boolean>(false);
   readonly emergencyStopReason = signal<string | null>(null);
+  readonly lastExecutionError = signal<string | null>(null);
 
   // Active selected trading account id
   readonly selectedAccountId = signal<string>('acc-demo-preview');
@@ -173,6 +184,104 @@ export class DashboardService {
   // Watchlist pair selected for detail view
   readonly selectedWatchlistPair = signal<string>('EUR/USD');
 
+  constructor() {
+    this.fetchMetrics();
+    this.fetchSignals();
+    this.initSignalsWebSocket();
+  }
+
+  /**
+   * Récupère la liste des signaux de trading IA depuis l'API REST
+   */
+  async fetchSignals(): Promise<void> {
+    try {
+      const data = await firstValueFrom(this.http.get<any[]>(`${environment.apiUrl}/signals`));
+      if (data && data.length > 0) {
+        const mapped: TradeSignal[] = data.map(item => this.mapBackendSignalToModel(item));
+        this.signals.set(mapped);
+      }
+    } catch (e) {
+      console.warn('[DashboardService] Impossible de récupérer les signaux depuis le backend, utilisation des signaux locaux', e);
+    }
+  }
+
+  /**
+   * Écoute en temps réel les nouveaux signaux poussés par le Moteur IA via WebSocket
+   */
+  private initSignalsWebSocket(): void {
+    this.websocketService.subscribe<any>('/topic/signals').subscribe((newSignal: any) => {
+      if (newSignal) {
+        const mapped = this.mapBackendSignalToModel(newSignal);
+        this.signals.update(list => {
+          // Éviter les doublons
+          if (list.some(s => s.id === mapped.id)) return list;
+          return [mapped, ...list];
+        });
+      }
+    });
+  }
+
+  private mapBackendSignalToModel(item: any): TradeSignal {
+    return {
+      id: item.id || `sig-${Date.now()}`,
+      symbol: item.symbol,
+      direction: item.direction,
+      timeframe: item.timeframe || 'H1',
+      alignmentScore: item.alignmentScore || 80,
+      entryPrice: item.entryPrice,
+      stopLoss: item.stopLoss,
+      takeProfit: item.takeProfit,
+      riskRewardRatio: item.riskRewardRatio || '1:2.4',
+      pipsRisk: Math.abs(Math.round((item.entryPrice - item.stopLoss) * (item.symbol.includes('JPY') ? 100 : 10000))),
+      pipsReward: Math.abs(Math.round((item.takeProfit - item.entryPrice) * (item.symbol.includes('JPY') ? 100 : 10000))),
+      status: item.status || 'PENDING_CONFIRMATION',
+      timestamp: item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'À l\'instant',
+      confluence: item.confluence || {
+        technical: {
+          title: 'Confluence Technique Multi-Indicateurs',
+          bias: item.direction === 'BUY' ? 'BULLISH' : 'BEARISH',
+          detail: 'Alignement des structures de prix et volumes.',
+          indicators: ['Structure Breakout', 'RSI Confluence', 'Order Block']
+        },
+        macro: {
+          title: 'Alignement Macroéconomique',
+          bias: item.direction === 'BUY' ? 'BULLISH' : 'BEARISH',
+          detail: 'Différentiel de taux et politique de banque centrale favorables.',
+          interestRateDiff: '+1.25%'
+        },
+        news: {
+          title: 'Protection Volatilité News',
+          status: 'CLEAR',
+          detail: 'Aucun événement majeur à fort impact imminent.',
+          nextEventInMinutes: 45
+        },
+        ai: {
+          title: 'Modèle Quantitatif Neural V4',
+          winrateEstimate: item.alignmentScore || 75,
+          historicalSampleSize: 2400,
+          patternConfidence: 'Élevée'
+        }
+      }
+    };
+  }
+
+  /**
+   * Récupère les métriques initiales du Dashboard depuis l'API Spring Boot
+   */
+  async fetchMetrics(): Promise<void> {
+    try {
+      const data = await firstValueFrom(this.http.get<any>(`${environment.apiUrl}/dashboard/metrics`));
+      if (data) {
+        this.serverMetrics.set(data);
+        if (data.accountBalance) {
+          this.baseCapital.set(data.accountBalance);
+        }
+      }
+    } catch (e) {
+      console.warn('[DashboardService] Métriques serveur non disponibles, utilisation des valeurs locales', e);
+    }
+  }
+
   // Circuit breaker state
   readonly circuitBreaker = computed<'NORMAL' | 'TRIGGERED' | 'EMERGENCY_STOPPED'>(() => {
     if (this.emergencyStopActive()) return 'EMERGENCY_STOPPED';
@@ -183,10 +292,11 @@ export class DashboardService {
   readonly metrics = computed(() => {
     const riskPrefs = this.onboardingService.riskPreferences();
     const positions = this.openPositions();
+    const server = this.serverMetrics();
     
     // Sum unrealized PnL from positions
     const openPnl = positions.reduce((acc, pos) => acc + pos.pnlDollar, 0);
-    const realizedDailyProfit = 40.35; // Simulated previous trade profit
+    const realizedDailyProfit = server?.dailyProfitDollar ?? 40.35;
     const totalDailyProfitDollar = realizedDailyProfit + openPnl;
     
     const balance = this.baseCapital();
@@ -255,11 +365,12 @@ export class DashboardService {
   });
 
   /**
-   * Emergency stop trigger
+   * Emergency stop trigger (Kill Switch)
    */
   triggerEmergencyStop(reason = 'Intervention manuelle utilisateur') {
     this.emergencyStopActive.set(true);
     this.emergencyStopReason.set(reason);
+    this.websocketService.disconnect();
   }
 
   /**
@@ -268,6 +379,7 @@ export class DashboardService {
   resumeOperations() {
     this.emergencyStopActive.set(false);
     this.emergencyStopReason.set(null);
+    this.websocketService.reconnect();
   }
 
   /**
@@ -285,39 +397,62 @@ export class DashboardService {
   }
 
   /**
-   * Confirm execution of a signal in demo mode
+   * Confirm execution of a signal in demo mode with Risk Engine validation
    */
-  confirmSignalExecution(signalId: string) {
-    if (this.emergencyStopActive()) return;
+  async confirmSignalExecution(signalId: string): Promise<boolean> {
+    if (this.emergencyStopActive()) return false;
+
+    const targetSignal = this.signals().find(s => s.id === signalId);
+    if (!targetSignal) return false;
+
+    this.lastExecutionError.set(null);
+
+    // Validation Zero-Trust auprès du Risk Engine Spring Boot
+    const riskCheck = await this.riskEngineService.evaluateTrade({
+      symbol: targetSignal.symbol,
+      direction: targetSignal.direction,
+      lotSize: 0.25,
+      entryPrice: targetSignal.entryPrice,
+      stopLoss: targetSignal.stopLoss,
+      takeProfit: targetSignal.takeProfit,
+      requestedRiskPct: this.onboardingService.riskPreferences().maxRiskPerTradePct || 1.0,
+      accountBalance: this.baseCapital(),
+      currentOpenPositions: this.openPositions().length,
+      currentExposurePct: this.metrics().currentExposurePct,
+      currentDailyLossPct: this.metrics().consumedDailyLossPct
+    });
+
+    if (!riskCheck.allowed) {
+      this.lastExecutionError.set(riskCheck.reason);
+      console.warn('[RiskEngine] Ordre rejeté :', riskCheck.reason);
+      return false;
+    }
 
     this.signals.update(list => 
       list.map(s => s.id === signalId ? { ...s, status: 'EXECUTED_DEMO' } : s)
     );
 
-    const targetSignal = this.signals().find(s => s.id === signalId);
-    if (targetSignal) {
-      // Add simulated open position
-      const newPos: OpenPosition = {
-        id: `pos-${Date.now().toString(36)}`,
-        symbol: targetSignal.symbol,
-        direction: targetSignal.direction,
-        volumeLots: 0.25,
-        openPrice: targetSignal.entryPrice,
-        currentPrice: targetSignal.entryPrice,
-        stopLoss: targetSignal.stopLoss,
-        takeProfit: targetSignal.takeProfit,
-        pnlDollar: 0.0,
-        pnlPips: 0.0,
-        openTime: 'À l\'instant',
-        riskPct: this.onboardingService.riskPreferences().maxRiskPerTradePct || 1.0
-      };
+    const newPos: OpenPosition = {
+      id: `pos-${Date.now().toString(36)}`,
+      symbol: targetSignal.symbol,
+      direction: targetSignal.direction,
+      volumeLots: 0.25,
+      openPrice: targetSignal.entryPrice,
+      currentPrice: targetSignal.entryPrice,
+      stopLoss: targetSignal.stopLoss,
+      takeProfit: targetSignal.takeProfit,
+      pnlDollar: 0.0,
+      pnlPips: 0.0,
+      openTime: 'À l\'instant',
+      riskPct: this.onboardingService.riskPreferences().maxRiskPerTradePct || 1.0
+    };
 
-      this.openPositions.update(positions => [newPos, ...positions]);
-    }
+    this.openPositions.update(positions => [newPos, ...positions]);
 
     if (this.activeExplainSignal()?.id === signalId) {
       this.closeExplainabilityDrawer();
     }
+    return true;
   }
 
   /**

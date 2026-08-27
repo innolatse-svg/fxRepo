@@ -1,6 +1,15 @@
-import { Injectable, signal, inject, PLATFORM_ID } from '@angular/core';
+/**
+ * WebSocketService
+ * Service de communication temps réel basé sur le protocole STOMP sur WebSocket / SockJS.
+ * Gère la connexion sécurisée (JWT), les souscriptions aux topics publics/privés et la résilience réseau.
+ *
+ * @date 2026-08-26
+ */
+import { Injectable, signal, inject, PLATFORM_ID, OnDestroy } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Observable, Subject } from 'rxjs';
+import { Observable, Subject, filter, map } from 'rxjs';
+import { Client, IMessage } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 import { environment } from '../../../environments/environment';
 
 export type WebSocketConnectionStatus = 'CONNECTING' | 'CONNECTED' | 'DISCONNECTED' | 'RECONNECTING';
@@ -15,94 +24,173 @@ export interface WebSocketPacket<T = unknown> {
 @Injectable({
   providedIn: 'root'
 })
-export class WebSocketService {
+export class WebSocketService implements OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly isBrowser = isPlatformBrowser(this.platformId);
 
-  readonly status = signal<WebSocketConnectionStatus>('CONNECTED');
-  readonly latencyMs = signal<number>(22);
+  readonly status = signal<WebSocketConnectionStatus>('DISCONNECTED');
+  readonly latencyMs = signal<number>(0);
   readonly packetsReceivedCount = signal<number>(0);
-  readonly isMockMode = signal<boolean>(environment.useMockData);
+  readonly isConnected = signal<boolean>(false);
 
-  private subjects = new Map<string, Subject<WebSocketPacket<unknown>>>();
+  private stompClient: Client | null = null;
+  private messageSubject = new Subject<{ topic: string; payload: unknown }>();
   private seqCounter = 0;
+  private latencyIntervalId: any = null;
 
   constructor() {
     if (this.isBrowser) {
-      this.initConnection();
+      this.initStompClient();
     }
   }
 
-  private initConnection(): void {
-    if (this.isMockMode()) {
+  ngOnDestroy(): void {
+    this.disconnect();
+  }
+
+  /**
+   * Initialise le client STOMP avec transport SockJS et authentification JWT
+   */
+  private initStompClient(): void {
+    const token = localStorage.getItem('token');
+
+    this.status.set('CONNECTING');
+
+    this.stompClient = new Client({
+      webSocketFactory: () => new SockJS(environment.wsUrl),
+      connectHeaders: {
+        Authorization: token ? `Bearer ${token}` : ''
+      },
+      debug: (msg: string) => {
+        // Log désactivé en production pour performance
+        if (!environment.production) {
+          // console.debug('[STOMP]', msg);
+        }
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000
+    });
+
+    this.stompClient.onConnect = () => {
       this.status.set('CONNECTED');
-      // Simulate incoming packets on subscribed topics
-      setInterval(() => {
+      this.isConnected.set(true);
+      this.startLatencyMonitor();
+
+      // Souscription automatique au topic de cotations de marché
+      this.subscribeInternal('/topic/quotes');
+      this.subscribeInternal('/topic/signals');
+      this.subscribeInternal('/user/queue/signals');
+    };
+
+    this.stompClient.onDisconnect = () => {
+      this.status.set('DISCONNECTED');
+      this.isConnected.set(false);
+      this.stopLatencyMonitor();
+    };
+
+    this.stompClient.onStompError = (frame) => {
+      console.error('[STOMP Error]', frame.headers['message'], frame.body);
+      this.status.set('DISCONNECTED');
+      this.isConnected.set(false);
+    };
+
+    this.stompClient.onWebSocketClose = () => {
+      if (this.status() === 'CONNECTED') {
+        this.status.set('RECONNECTING');
+      }
+      this.isConnected.set(false);
+      this.stopLatencyMonitor();
+    };
+
+    try {
+      this.stompClient.activate();
+    } catch (err) {
+      console.error('[STOMP Activation Error]', err);
+      this.status.set('DISCONNECTED');
+    }
+  }
+
+  /**
+   * Souscrit en interne auprès du broker STOMP et route les trames vers le Subject global
+   */
+  private subscribeInternal(topic: string): void {
+    if (!this.stompClient || !this.stompClient.connected) return;
+
+    this.stompClient.subscribe(topic, (message: IMessage) => {
+      try {
+        const payload = JSON.parse(message.body);
         this.seqCounter++;
         this.packetsReceivedCount.update(c => c + 1);
-        const jitter = Math.floor(18 + Math.random() * 8);
-        this.latencyMs.set(jitter);
-      }, 2000);
-    } else {
-      // In real Spring Boot deployment, instantiate real WebSocket / SockJS STOMP client
-      this.status.set('CONNECTING');
-      try {
-        const ws = new WebSocket(environment.wsUrl);
-        ws.onopen = () => {
-          this.status.set('CONNECTED');
-        };
-        ws.onclose = () => {
-          this.status.set('DISCONNECTED');
-        };
-        ws.onerror = () => {
-          this.status.set('DISCONNECTED');
-        };
-        ws.onmessage = (event) => {
-          try {
-            const parsed = JSON.parse(event.data) as WebSocketPacket;
-            this.emitToTopic(parsed.topic, parsed.data);
-          } catch (e) {
-            console.warn('[WS] Malformed packet', e);
-          }
-        };
-      } catch {
-        this.status.set('DISCONNECTED');
+        this.messageSubject.next({ topic, payload });
+      } catch (e) {
+        console.warn(`[STOMP] Format de trame non-JSON reçu sur ${topic}`, message.body);
       }
-    }
+    });
   }
 
   /**
-   * Subscribe to a real-time topic (e.g. /topic/signals, /topic/ticks, /topic/risk-alerts)
+   * Souscrit réactivement à un topic STOMP (ex: /topic/quotes, /topic/signals)
+   *
+   * @param topic Nom de la destination STOMP
+   * @returns Observable émettant les données typées reçues
    */
-  subscribe<T>(topic: string): Observable<WebSocketPacket<T>> {
-    if (!this.subjects.has(topic)) {
-      this.subjects.set(topic, new Subject<WebSocketPacket<unknown>>());
+  subscribe<T>(topic: string): Observable<T> {
+    // Si déjà connecté, assurer la souscription active
+    if (this.stompClient && this.stompClient.connected) {
+      this.subscribeInternal(topic);
     }
-    return this.subjects.get(topic)!.asObservable() as Observable<WebSocketPacket<T>>;
+
+    return this.messageSubject.asObservable().pipe(
+      filter(msg => msg.topic === topic),
+      map(msg => msg.payload as T)
+    );
   }
 
   /**
-   * Publish a message to a topic or trigger an internal simulated packet
+   * Déconnexion explicite (utilisée par le Kill Switch d'urgence)
    */
-  emitToTopic<T>(topic: string, data: T): void {
-    if (this.subjects.has(topic)) {
-      const packet: WebSocketPacket<T> = {
-        topic,
-        data,
-        timestamp: new Date().toISOString(),
-        sequenceId: ++this.seqCounter
-      };
-      this.subjects.get(topic)!.next(packet);
+  disconnect(): void {
+    this.stopLatencyMonitor();
+    if (this.stompClient) {
+      try {
+        this.stompClient.deactivate();
+      } catch (e) {
+        console.warn('[STOMP] Erreur lors de la désactivation', e);
+      }
+      this.stompClient = null;
     }
+    this.status.set('DISCONNECTED');
+    this.isConnected.set(false);
   }
 
   /**
-   * Reconnect to the WebSocket endpoint
+   * Reconnexion manuelle ou après réarmement du Kill Switch
    */
   reconnect(): void {
+    this.disconnect();
     this.status.set('RECONNECTING');
     setTimeout(() => {
-      this.initConnection();
-    }, 1000);
+      this.initStompClient();
+    }, 500);
+  }
+
+  /**
+   * Mesure de latence simulée pour l'indicateur UI
+   */
+  private startLatencyMonitor(): void {
+    this.stopLatencyMonitor();
+    this.latencyIntervalId = setInterval(() => {
+      const ping = Math.floor(12 + Math.random() * 10);
+      this.latencyMs.set(ping);
+    }, 3000);
+  }
+
+  private stopLatencyMonitor(): void {
+    if (this.latencyIntervalId) {
+      clearInterval(this.latencyIntervalId);
+      this.latencyIntervalId = null;
+    }
+    this.latencyMs.set(0);
   }
 }

@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  useMockData: true, // Permet de basculer en 1 clic entre Mock Engine et API réelle Spring Boot
-  apiUrl: 'http://localhost:8080/api',
-  wsUrl: 'ws://localhost:8080/ws',
+  useMockData: false,
+  apiUrl: 'http://localhost:8080/api/v1',
+  wsUrl: 'http://localhost:8080/ws/stream',
   apiVersion: 'v1'
 };

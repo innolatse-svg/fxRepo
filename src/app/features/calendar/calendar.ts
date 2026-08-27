@@ -1,22 +1,6 @@
-import { ChangeDetectionStrategy, Component, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
-
-export type EventImpact = 'HIGH' | 'MEDIUM' | 'LOW';
-
-export interface EconomicEvent {
-  id: string;
-  time: string;
-  currency: string;
-  countryCode: string;
-  title: string;
-  impact: EventImpact;
-  actual?: string;
-  forecast: string;
-  previous: string;
-  affectedPairs: string[];
-  historicalPipMove: number;
-  aiNote: string;
-}
+import { CalendarService, EconomicEvent, EventImpact } from '../../core/services/calendar.service';
 
 export const INITIAL_EVENTS: EconomicEvent[] = [
   {
@@ -373,6 +357,8 @@ export const INITIAL_EVENTS: EconomicEvent[] = [
   `
 })
 export class CalendarComponent implements OnInit, OnDestroy {
+  calendarService = inject(CalendarService);
+
   readonly availableCurrencies = ['TOUS', 'USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
   readonly selectedCurrency = signal<string>('TOUS');
   readonly selectedImpact = signal<'ALL' | 'HIGH' | 'MEDIUM'>('ALL');
@@ -381,7 +367,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
   readonly countdownSeconds = signal<number>(45);
   private timer: ReturnType<typeof setInterval> | null = null;
 
-  readonly events = signal<EconomicEvent[]>(INITIAL_EVENTS);
+  readonly events = computed<EconomicEvent[]>(() => {
+    const list = this.calendarService.events();
+    return (list && list.length > 0) ? list : INITIAL_EVENTS;
+  });
 
   readonly filteredEvents = computed(() => {
     const cur = this.selectedCurrency();
@@ -395,6 +384,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    this.calendarService.fetchCalendar();
+
     this.timer = setInterval(() => {
       this.countdownSeconds.update(s => s > 0 ? s - 1 : 59);
     }, 1000);

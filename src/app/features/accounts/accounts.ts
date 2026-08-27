@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject, signal, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { MockUserStorageService } from '../../core/services/mock-user-storage.service';
 import { ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { TradingAccountService, TradingAccountResponse } from '../../core/services/trading-account.service';
+import { AuthService } from '../../core/services/auth.service';
 
 export interface MT5AccountExtended {
   id: string;
@@ -73,6 +74,11 @@ export const INITIAL_ACCOUNTS: MT5AccountExtended[] = [
             <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
               BRIDGE EA ULTRA-LOW LATENCY
             </span>
+            @if (isSuperAdmin()) {
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                👑 ADMIN MODE (QUOTAS ILLIMITÉS)
+              </span>
+            }
           </div>
           <p class="text-xs sm:text-sm text-slate-400 mt-1">
             Gérez vos connexions brokers MT5, surveillez la latence des serveurs et configurez le routage des ordres.
@@ -83,13 +89,27 @@ export const INITIAL_ACCOUNTS: MT5AccountExtended[] = [
           <button 
             id="add-account-btn"
             type="button"
+            [disabled]="isExpired() && !isSuperAdmin()"
             (click)="openAddAccountModal.set(true)"
-            class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs transition-colors flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
+            class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-black font-bold text-xs transition-colors flex items-center gap-1.5 shadow-lg shadow-emerald-500/20">
             <span class="mat-icon text-base">add</span>
             <span>Connecter un Compte MT5</span>
           </button>
         </div>
       </div>
+
+      <!-- SaaS Expired Banner -->
+      @if (isExpired() && !isSuperAdmin()) {
+        <div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3 text-rose-400 text-xs">
+            <span class="mat-icon text-lg">warning</span>
+            <span><strong>Période d'essai terminée :</strong> Votre accès aux fonctionnalités de trading et aux comptes MT5 est suspendu.</span>
+          </div>
+          <a routerLink="/app/settings" class="px-3 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-black font-bold text-xs">
+            Mettre à niveau
+          </a>
+        </div>
+      }
 
       <!-- ============================================================ -->
       <!-- GLOBAL BRIDGE TELEMETRY STATUS                               -->
@@ -369,13 +389,41 @@ export const INITIAL_ACCOUNTS: MT5AccountExtended[] = [
     }
   `
 })
-export class AccountsComponent {
-  userStorage = inject(MockUserStorageService);
+export class AccountsComponent implements OnInit {
+  tradingAccountService = inject(TradingAccountService);
+  authService = inject(AuthService);
 
-  readonly accounts = signal<MT5AccountExtended[]>(INITIAL_ACCOUNTS);
   readonly openAddAccountModal = signal<boolean>(false);
   readonly showPassword = signal<boolean>(false);
   readonly isSyncing = signal<string | null>(null);
+  readonly isSubmitting = signal<boolean>(false);
+  readonly errorMessage = signal<string | null>(null);
+
+  readonly isSuperAdmin = computed(() => this.authService.currentUser()?.role === 'SUPER_ADMIN');
+  readonly isExpired = computed(() => this.authService.currentUser()?.subscriptionStatus === 'EXPIRED');
+
+  // Accounts list computed from TradingAccountService (or initial mock fallback if empty)
+  readonly accounts = computed<MT5AccountExtended[]>(() => {
+    const list = this.tradingAccountService.accounts();
+    if (list && list.length > 0) {
+      return list.map(a => ({
+        id: a.id,
+        broker: a.broker,
+        server: a.server,
+        login: a.login,
+        accountType: a.accountType as 'DEMO' | 'LIVE',
+        balance: a.balance || 10000,
+        equity: a.equity || 10000,
+        currency: a.currency || 'USD',
+        leverage: a.leverage || '1:100',
+        pingMs: 22,
+        connected: a.connected,
+        autoTradingEnabled: a.autoTradingEnabled,
+        lastSyncTime: 'À l\'instant'
+      }));
+    }
+    return INITIAL_ACCOUNTS;
+  });
 
   readonly connectedAccountsCount = computed(() => this.accounts().filter(a => a.connected).length);
   
@@ -398,7 +446,12 @@ export class AccountsComponent {
     accountType: new FormControl<'DEMO' | 'LIVE'>('DEMO', [Validators.required])
   });
 
+  ngOnInit(): void {
+    this.tradingAccountService.fetchAccounts();
+  }
+
   maskLogin(login: string): string {
+    if (!login) return '';
     if (login.length <= 4) return login;
     return login.substring(0, 4) + '****';
   }
@@ -407,66 +460,68 @@ export class AccountsComponent {
     this.showPassword.update(s => !s);
   }
 
-  toggleAutoTrading(id: string) {
-    this.accounts.update(list =>
-      list.map(a => a.id === id ? { ...a, autoTradingEnabled: !a.autoTradingEnabled } : a)
-    );
+  async toggleAutoTrading(id: string) {
+    try {
+      await this.tradingAccountService.toggleAutoTrading(id);
+    } catch (e) {
+      console.warn('[Accounts] Erreur lors du basculement auto-trading', e);
+    }
   }
 
   testPing(id: string) {
     const jitter = Math.floor(15 + Math.random() * 18);
-    this.accounts.update(list =>
-      list.map(a => a.id === id ? { ...a, pingMs: jitter } : a)
-    );
+    // Simulation visuelle du test de latence
+    const target = this.accounts().find(a => a.id === id);
+    if (target) {
+      target.pingMs = jitter;
+    }
   }
 
-  syncBalance(id: string) {
+  async syncBalance(id: string) {
     this.isSyncing.set(id);
-    setTimeout(() => {
-      this.accounts.update(list =>
-        list.map(a => {
-          if (a.id === id) {
-            const randomDelta = (Math.random() - 0.3) * 50;
-            return {
-              ...a,
-              balance: Number((a.balance + randomDelta).toFixed(2)),
-              equity: Number((a.equity + randomDelta).toFixed(2)),
-              lastSyncTime: 'À l\'instant'
-            };
-          }
-          return a;
-        })
-      );
+    try {
+      await this.tradingAccountService.syncAccount(id);
+    } catch (e) {
+      console.warn('[Accounts] Erreur synchronisation MT5', e);
+    } finally {
       this.isSyncing.set(null);
-    }, 800);
+    }
   }
 
-  removeAccount(id: string) {
-    this.accounts.update(list => list.filter(a => a.id !== id));
+  async removeAccount(id: string) {
+    try {
+      await this.tradingAccountService.deleteAccount(id);
+    } catch (e) {
+      console.warn('[Accounts] Erreur suppression compte', e);
+    }
   }
 
-  submitNewAccount() {
+  async submitNewAccount() {
     if (this.accountForm.invalid) return;
 
-    const val = this.accountForm.value;
-    const newAcc: MT5AccountExtended = {
-      id: `acc-${Date.now().toString(36)}`,
-      broker: val.broker || 'Courtier Partenaire',
-      server: val.server || 'Server-Live',
-      login: val.login || '12345678',
-      accountType: val.accountType || 'DEMO',
-      balance: val.accountType === 'DEMO' ? 10000.00 : 25000.00,
-      equity: val.accountType === 'DEMO' ? 10000.00 : 25000.00,
-      currency: 'USD',
-      leverage: '1:100',
-      pingMs: 25,
-      connected: true,
-      autoTradingEnabled: false,
-      lastSyncTime: 'À l\'instant'
-    };
+    this.isSubmitting.set(true);
+    this.errorMessage.set(null);
 
-    this.accounts.update(list => [...list, newAcc]);
-    this.accountForm.reset({ accountType: 'DEMO' });
-    this.openAddAccountModal.set(false);
+    const val = this.accountForm.value;
+    const plainPassword = val.password || '';
+
+    try {
+      // 1. Envoi au Credential Vault via l'API REST
+      await this.tradingAccountService.createAccount({
+        broker: val.broker || 'MetaQuotes Broker',
+        server: val.server || 'Demo-Server-01',
+        login: val.login || '12345678',
+        password: plainPassword,
+        accountType: val.accountType || 'DEMO'
+      });
+
+      // 2. Sécurité : Effacement immédiat du mot de passe de la mémoire
+      this.accountForm.reset({ accountType: 'DEMO' });
+      this.isSubmitting.set(false);
+      this.openAddAccountModal.set(false);
+    } catch (e: any) {
+      this.isSubmitting.set(false);
+      this.errorMessage.set(e.error?.message || 'Erreur lors de la liaison du compte broker');
+    }
   }
 }

@@ -690,6 +690,63 @@ const POPULAR_BROKERS: BrokerOption[] = [
 
             </div>
 
+            <!-- Trailing Stop Manager Configuration -->
+            <div class="p-5 rounded-xl bg-[#121217] border border-cyan-500/30 space-y-4 shadow-lg">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+                <div class="space-y-0.5 max-w-xl">
+                  <div class="text-xs font-bold text-white flex items-center gap-2">
+                    <span class="mat-icon text-cyan-400 text-sm">trending_up</span>
+                    <span>Trailing Stop Dynamique (Protection & Verrouillage des Gains)</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400">
+                    Ajuste automatiquement et en continu le Stop Loss au fur et à mesure que le marché évolue favorablement.
+                  </p>
+                </div>
+                
+                <label for="trailing-stop-toggle" class="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    id="trailing-stop-toggle"
+                    type="checkbox" 
+                    [checked]="draftTrailingStopEnabled()"
+                    (change)="toggleTrailingStop($event)"
+                    class="sr-only peer"
+                  />
+                  <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                </label>
+              </div>
+
+              <!-- Trailing Step in Pips -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold text-white">Pas d'avancement du Stop Loss (Trailing Step) :</div>
+                  <div class="text-[11px] text-slate-400">Distance de profit minimale en pips avant de resserrer le Stop Loss vers le gain.</div>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                  <input 
+                    type="range" 
+                    min="5" 
+                    max="50" 
+                    step="5"
+                    [value]="draftTrailingStepPips()"
+                    (input)="updateTrailingStep($event)"
+                    class="w-32 accent-cyan-500 cursor-pointer"
+                  />
+                  <span class="px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono font-bold text-xs">
+                    {{ draftTrailingStepPips() }} pips
+                  </span>
+                </div>
+              </div>
+
+              <!-- Autonomous Server Warning -->
+              <div class="p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-start gap-2.5 text-[11px] text-cyan-200">
+                <span class="mat-icon text-cyan-400 text-base">cloud_sync</span>
+                <span>
+                  <strong>Exécution Autonome Serveur 24/7 :</strong> Le Trailing Stop et le mode Full-Auto tournent directement sur le backend Spring Boot en arrière-plan sans nécessiter que votre navigateur reste ouvert.
+                </span>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -1143,6 +1200,8 @@ export class SettingsComponent implements OnInit {
   draftAutomationLevel = signal<AutomationLevel>(2);
   draftManualConfirmation = signal<boolean>(true);
   draftMaxDailyTrades = signal<number>(4);
+  draftTrailingStopEnabled = signal<boolean>(true);
+  draftTrailingStepPips = signal<number>(15);
 
   // Profile fields
   profileFirstName = signal<string>('');
@@ -1358,6 +1417,18 @@ export class SettingsComponent implements OnInit {
   updateMaxDailyTrades(event: Event) {
     const target = event.target as HTMLInputElement;
     this.draftMaxDailyTrades.set(parseInt(target.value, 10) || 4);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  toggleTrailingStop(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.draftTrailingStopEnabled.set(target.checked);
+    this.hasUnsavedChanges.set(true);
+  }
+
+  updateTrailingStep(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.draftTrailingStepPips.set(parseInt(target.value, 10) || 15);
     this.hasUnsavedChanges.set(true);
   }
 

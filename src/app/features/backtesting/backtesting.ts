@@ -1,85 +1,36 @@
-import { ChangeDetectionStrategy, Component, signal, computed } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, signal, computed, inject, OnInit } from '@angular/core';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-
-export interface BacktestTrade {
-  id: string;
-  date: string;
-  symbol: string;
-  type: 'BUY' | 'SELL';
-  entryPrice: number;
-  exitPrice: number;
-  pnlDollar: number;
-  rMultiple: number;
-  outcome: 'WIN' | 'LOSS';
-  duration: string;
-}
+import { BacktestingService, BacktestResult, BacktestTradeItem, EquityPoint } from '../../core/services/backtesting.service';
 
 export interface BacktestStrategyConfig {
   id: string;
   name: string;
   description: string;
-  defaultWinrate: number;
-  defaultProfitFactor: number;
-  defaultTotalReturn: number;
-  defaultMaxDrawdown: number;
-  defaultSharpe: number;
-  sampleTrades: BacktestTrade[];
 }
 
 export const STRATEGIES: BacktestStrategyConfig[] = [
   {
     id: 'smc-orderflow',
     name: 'SMC & Institutional Order Flow H4',
-    description: 'Balayages de liquidité (Sweeps), Fair Value Gaps (FVG) et changements de structure (CHoCH).',
-    defaultWinrate: 68.5,
-    defaultProfitFactor: 2.48,
-    defaultTotalReturn: 54.2,
-    defaultMaxDrawdown: 4.6,
-    defaultSharpe: 2.31,
-    sampleTrades: [
-      { id: 'bt-1', date: '2026-02-14 14:00', symbol: 'EUR/USD', type: 'SELL', entryPrice: 1.0880, exitPrice: 1.0815, pnlDollar: 650, rMultiple: 2.6, outcome: 'WIN', duration: '18h' },
-      { id: 'bt-2', date: '2026-02-10 09:30', symbol: 'GBP/USD', type: 'BUY', entryPrice: 1.2840, exitPrice: 1.2930, pnlDollar: 900, rMultiple: 3.0, outcome: 'WIN', duration: '24h' },
-      { id: 'bt-3', date: '2026-02-06 16:15', symbol: 'USD/JPY', type: 'BUY', entryPrice: 154.20, exitPrice: 153.85, pnlDollar: -350, rMultiple: -1.0, outcome: 'LOSS', duration: '6h' },
-      { id: 'bt-4', date: '2026-01-29 11:00', symbol: 'EUR/USD', type: 'BUY', entryPrice: 1.0790, exitPrice: 1.0865, pnlDollar: 750, rMultiple: 2.5, outcome: 'WIN', duration: '14h' },
-      { id: 'bt-5', date: '2026-01-22 15:45', symbol: 'XAU/USD', type: 'BUY', entryPrice: 2880.0, exitPrice: 2925.0, pnlDollar: 1350, rMultiple: 3.4, outcome: 'WIN', duration: '32h' }
-    ]
+    description: 'Balayages de liquidité (Sweeps), Fair Value Gaps (FVG) et changements de structure (CHoCH).'
   },
   {
     id: 'macro-ai',
     name: 'Macro AI & Taux Différentiels Fed/BCE',
-    description: 'Modèle combinant les surprises macroéconomiques (CPI, NFP) et l\'alignement technique D1.',
-    defaultWinrate: 72.0,
-    defaultProfitFactor: 2.85,
-    defaultTotalReturn: 68.4,
-    defaultMaxDrawdown: 3.9,
-    defaultSharpe: 2.64,
-    sampleTrades: [
-      { id: 'bt-m1', date: '2026-02-12 14:30', symbol: 'EUR/USD', type: 'SELL', entryPrice: 1.0920, exitPrice: 1.0820, pnlDollar: 1000, rMultiple: 3.3, outcome: 'WIN', duration: '48h' },
-      { id: 'bt-m2', date: '2026-02-04 10:00', symbol: 'USD/CAD', type: 'BUY', entryPrice: 1.4120, exitPrice: 1.4240, pnlDollar: 1200, rMultiple: 2.8, outcome: 'WIN', duration: '36h' },
-      { id: 'bt-m3', date: '2026-01-25 15:00', symbol: 'AUD/USD', type: 'SELL', entryPrice: 0.6540, exitPrice: 0.6580, pnlDollar: -400, rMultiple: -1.0, outcome: 'LOSS', duration: '12h' }
-    ]
+    description: 'Modèle combinant les surprises macroéconomiques (CPI, NFP) et l\'alignement technique D1.'
   },
   {
     id: 'trend-ema',
     name: 'Trend Following EMA 50/200 & Momentum',
-    description: 'Poursuite de tendance institutionnelle avec confirmation MACD et filtre ATR.',
-    defaultWinrate: 58.0,
-    defaultProfitFactor: 1.95,
-    defaultTotalReturn: 38.0,
-    defaultMaxDrawdown: 6.2,
-    defaultSharpe: 1.85,
-    sampleTrades: [
-      { id: 'bt-t1', date: '2026-02-15 08:00', symbol: 'GBP/USD', type: 'BUY', entryPrice: 1.2820, exitPrice: 1.2910, pnlDollar: 900, rMultiple: 2.2, outcome: 'WIN', duration: '20h' },
-      { id: 'bt-t2', date: '2026-02-08 14:00', symbol: 'USD/JPY', type: 'SELL', entryPrice: 155.10, exitPrice: 155.60, pnlDollar: -500, rMultiple: -1.0, outcome: 'LOSS', duration: '8h' }
-    ]
+    description: 'Poursuite de tendance institutionnelle avec confirmation MACD et filtre ATR.'
   }
 ];
 
 @Component({
   selector: 'app-backtesting-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, SlicePipe],
   template: `
     <div class="space-y-8 max-w-7xl mx-auto text-left">
       
@@ -94,43 +45,44 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
               Laboratoire de Backtesting & IA
             </h1>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              SIMULATION TIC-PAR-TIC
+              MOTEUR QUANTITATIF V2
             </span>
           </div>
           <p class="text-xs sm:text-sm text-slate-400 mt-1">
-            Testez la robustesse statistique de nos modèles sur 5+ années de données de marché réelles avec slippage et spreads institutionnels.
+            Simulateur quantitatif haute fidélité avec rejeu historique et analyse institutionnelle du risque.
           </p>
         </div>
 
         <div class="flex items-center gap-3">
           <button 
-            id="export-backtest-csv"
-            type="button"
             (click)="exportTradesCsv()"
-            class="px-3.5 py-2 rounded-xl bg-[#141419] hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors">
-            <span class="mat-icon text-sm text-emerald-400">download</span>
-            <span>Exporter Résultats</span>
+            [disabled]="!result() || result()!.trades.length === 0"
+            class="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 disabled:opacity-40 text-slate-200 text-xs font-mono font-bold transition-colors flex items-center gap-2">
+            <span class="mat-icon text-sm">download</span>
+            <span>Exporter CSV</span>
           </button>
         </div>
       </div>
 
       <!-- ============================================================ -->
-      <!-- CONFIGURATION PANEL & SIMULATION RUNNER                      -->
+      <!-- CONTROL PANEL / SIMULATION PARAMETERS                        -->
       <!-- ============================================================ -->
-      <div class="p-6 rounded-2xl bg-[#0e0e12] border border-slate-800 shadow-xl space-y-6">
-        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+      <div class="p-6 rounded-2xl bg-[#0e0e12] border border-slate-800 space-y-6 shadow-xl">
+        <div class="flex items-center justify-between">
           <h2 class="text-sm font-mono uppercase text-slate-300 font-bold flex items-center gap-2">
             <span class="mat-icon text-emerald-400 text-base">tune</span>
-            <span>Paramètres du Modèle de Simulation</span>
+            <span>Paramètres du Moteur Quantitatif</span>
           </h2>
-          <span class="text-xs font-mono text-emerald-400">Données tick-level LMAX & Dukascopy</span>
+          <span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+            5 000 bougies OHLCV
+          </span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">
           
           <!-- Strategy Selector -->
           <div class="space-y-1">
-            <label for="bt-strategy" class="text-slate-400">Stratégie / Algorithme</label>
+            <label for="bt-strategy" class="text-slate-400">Stratégie Algorithmique</label>
             <select 
               id="bt-strategy"
               [value]="selectedStrategyId()"
@@ -142,17 +94,17 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
             </select>
           </div>
 
-          <!-- Historical Period -->
+          <!-- Period Selector -->
           <div class="space-y-1">
-            <label for="bt-period" class="text-slate-400">Période Historique</label>
+            <label for="bt-period" class="text-slate-400">Horizon Temporel</label>
             <select 
               id="bt-period"
               [value]="selectedPeriod()"
               (change)="onPeriodChange($event)"
               class="w-full px-3 py-2 rounded-xl bg-[#141419] border border-slate-800 text-white font-bold focus:outline-none focus:border-emerald-500">
-              <option value="1Y">1 An (2025 - 2026)</option>
-              <option value="3Y">3 Ans (2023 - 2026)</option>
-              <option value="5Y">5 Ans (2021 - 2026)</option>
+              <option value="1Y">1 An (2 000 barres)</option>
+              <option value="3Y">3 Ans (4 500 barres)</option>
+              <option value="5Y">5 Ans (7 000 barres)</option>
             </select>
           </div>
 
@@ -202,7 +154,7 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
               @if (isSimulating()) {
                 <span class="text-emerald-400 font-bold flex items-center gap-1.5">
                   <span class="mat-icon text-sm animate-spin">refresh</span>
-                  <span>Analyse des ticks historiques... {{ simulationProgress() }}%</span>
+                  <span>Calcul quantitatif en cours sur le serveur... {{ simulationProgress() }}%</span>
                 </span>
               } @else {
                 <span>Prêt à simuler {{ currentStrategy().name }}</span>
@@ -239,37 +191,53 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
         
         <div class="p-4 rounded-xl bg-[#0e0e12] border border-slate-800 space-y-1">
           <div class="text-[10px] font-mono uppercase text-slate-400">Rendement Total</div>
-          <div class="text-2xl font-black font-mono text-emerald-400">+{{ currentStrategy().defaultTotalReturn }}%</div>
-          <div class="text-[10px] text-slate-400">+{{ (initialCapital() * currentStrategy().defaultTotalReturn / 100) | number:'1.0-0' }} $ Net</div>
+          <div class="text-2xl font-black font-mono text-emerald-400">
+            {{ (result()?.netProfitPct ?? 0) >= 0 ? '+' : '' }}{{ result()?.netProfitPct ?? 0 }}%
+          </div>
+          <div class="text-[10px] text-slate-400">
+            {{ (result()?.netProfitDollar ?? 0) >= 0 ? '+' : '' }}{{ result()?.netProfitDollar ?? 0 | number:'1.0-0' }} $ Net
+          </div>
         </div>
 
         <div class="p-4 rounded-xl bg-[#0e0e12] border border-slate-800 space-y-1">
           <div class="text-[10px] font-mono uppercase text-slate-400">Taux de Réussite</div>
-          <div class="text-2xl font-black font-mono text-white">{{ currentStrategy().defaultWinrate }}%</div>
-          <div class="text-[10px] text-emerald-400">Sur 420 trades</div>
+          <div class="text-2xl font-black font-mono text-white">
+            {{ result()?.winRate ?? 0 }}%
+          </div>
+          <div class="text-[10px] text-emerald-400">
+            Sur {{ result()?.totalTrades ?? 0 }} trades
+          </div>
         </div>
 
         <div class="p-4 rounded-xl bg-[#0e0e12] border border-slate-800 space-y-1">
           <div class="text-[10px] font-mono uppercase text-slate-400">Profit Factor</div>
-          <div class="text-2xl font-black font-mono text-cyan-400">{{ currentStrategy().defaultProfitFactor }}</div>
+          <div class="text-2xl font-black font-mono text-cyan-400">
+            {{ result()?.profitFactor ?? 0 }}
+          </div>
           <div class="text-[10px] text-slate-400">Gains bruts / Pertes</div>
         </div>
 
         <div class="p-4 rounded-xl bg-[#0e0e12] border border-slate-800 space-y-1">
           <div class="text-[10px] font-mono uppercase text-slate-400">Max Drawdown</div>
-          <div class="text-2xl font-black font-mono text-rose-400">-{{ currentStrategy().defaultMaxDrawdown }}%</div>
+          <div class="text-2xl font-black font-mono text-rose-400">
+            -{{ result()?.maxDrawdownPct ?? 0 }}%
+          </div>
           <div class="text-[10px] text-slate-400">Conforme FTMO (&lt; 10%)</div>
         </div>
 
         <div class="p-4 rounded-xl bg-[#0e0e12] border border-slate-800 space-y-1">
           <div class="text-[10px] font-mono uppercase text-slate-400">Ratio de Sharpe</div>
-          <div class="text-2xl font-black font-mono text-indigo-400">{{ currentStrategy().defaultSharpe }}</div>
+          <div class="text-2xl font-black font-mono text-indigo-400">
+            {{ result()?.sharpeRatio ?? 0 }}
+          </div>
           <div class="text-[10px] text-slate-400">Excellente régularité</div>
         </div>
 
         <div class="p-4 rounded-xl bg-[#0e0e12] border border-slate-800 space-y-1">
           <div class="text-[10px] font-mono uppercase text-slate-400">Espérance Math.</div>
-          <div class="text-2xl font-black font-mono text-emerald-400">+0.68 R</div>
+          <div class="text-2xl font-black font-mono text-emerald-400">
+            +{{ result()?.expectancyR ?? 0 }} R
+          </div>
           <div class="text-[10px] text-slate-400">Par opportunité</div>
         </div>
 
@@ -282,10 +250,10 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
         <div class="flex items-center justify-between">
           <div class="text-xs font-mono uppercase text-slate-400 font-bold flex items-center gap-2">
             <span class="mat-icon text-base text-emerald-400">show_chart</span>
-            <span>Courbe des Capitaux Propres (Equity Curve Simulée)</span>
+            <span>Courbe des Capitaux Propres (Equity Curve Backend)</span>
           </div>
           <span class="text-xs font-mono text-slate-300">
-            Capital Final : <strong class="text-emerald-400">{{ (initialCapital() * (1 + currentStrategy().defaultTotalReturn / 100)) | number:'1.2-2' }} $</strong>
+            Capital Final : <strong class="text-emerald-400">{{ (result()?.finalCapital ?? initialCapital()) | number:'1.2-2' }} $</strong>
           </span>
         </div>
 
@@ -306,17 +274,15 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
 
             <!-- Area -->
             <path 
-              d="M 0,170 Q 100,160 200,135 T 400,105 T 600,65 T 800,25 L 800,200 L 0,200 Z" 
+              [attr.d]="svgAreaPath()" 
               fill="url(#eqGrad)" />
 
             <!-- Curve -->
             <path 
-              d="M 0,170 Q 100,160 200,135 T 400,105 T 600,65 T 800,25" 
+              [attr.d]="svgCurvePath()" 
               fill="none" 
               stroke="#10b981" 
               stroke-width="3" />
-
-            <circle cx="800" cy="25" r="4" fill="#10b981" />
           </svg>
         </div>
       </div>
@@ -328,14 +294,14 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-mono uppercase text-slate-300 font-bold flex items-center gap-2">
             <span class="mat-icon text-emerald-400 text-base">receipt_long</span>
-            <span>Échantillon des Positions Exécutées</span>
+            <span>Historique des Positions Exécutées</span>
           </h3>
-          <span class="text-xs font-mono text-slate-400">5 dernières transactions simulées</span>
+          <span class="text-xs font-mono text-slate-400">{{ (result()?.trades?.length ?? 0) }} transactions simulées</span>
         </div>
 
-        <div class="rounded-2xl bg-[#0e0e12] border border-slate-800 overflow-x-auto shadow-xl">
+        <div class="rounded-2xl bg-[#0e0e12] border border-slate-800 overflow-x-auto shadow-xl max-h-96">
           <table class="w-full text-left text-xs font-mono">
-            <thead class="bg-[#141419] border-b border-slate-800 text-slate-400 uppercase text-[10px]">
+            <thead class="bg-[#141419] border-b border-slate-800 text-slate-400 uppercase text-[10px] sticky top-0">
               <tr>
                 <th class="p-3.5">Date & Heure</th>
                 <th class="p-3.5">Instrument</th>
@@ -349,16 +315,16 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60">
-              @for (trade of currentStrategy().sampleTrades; track trade.id) {
+              @for (trade of (result()?.trades ?? []); track trade.id) {
                 <tr class="hover:bg-slate-800/30 transition-colors">
-                  <td class="p-3.5 text-slate-400">{{ trade.date }}</td>
+                  <td class="p-3.5 text-slate-400">{{ trade.entryTime | slice:0:16 }}</td>
                   <td class="p-3.5 font-bold text-white">{{ trade.symbol }}</td>
                   <td class="p-3.5">
                     <span 
                       class="px-1.5 py-0.5 rounded text-[10px] font-bold"
-                      [class.text-emerald-400]="trade.type === 'BUY'"
-                      [class.text-rose-400]="trade.type === 'SELL'">
-                      {{ trade.type }}
+                      [class.text-emerald-400]="trade.direction === 'BUY'"
+                      [class.text-rose-400]="trade.direction === 'SELL'">
+                      {{ trade.direction }}
                     </span>
                   </td>
                   <td class="p-3.5 text-slate-200">{{ trade.entryPrice }}</td>
@@ -398,7 +364,9 @@ export const STRATEGIES: BacktestStrategyConfig[] = [
     </div>
   `
 })
-export class BacktestingComponent {
+export class BacktestingComponent implements OnInit {
+  private backtestingService = inject(BacktestingService);
+
   readonly strategies = STRATEGIES;
 
   readonly selectedStrategyId = signal<string>('smc-orderflow');
@@ -408,10 +376,43 @@ export class BacktestingComponent {
 
   readonly isSimulating = signal<boolean>(false);
   readonly simulationProgress = signal<number>(0);
+  readonly result = signal<BacktestResult | null>(null);
 
   readonly currentStrategy = computed(() => {
     return this.strategies.find(s => s.id === this.selectedStrategyId()) || this.strategies[0];
   });
+
+  // Calcul mathématique dynamique de la courbe SVG
+  readonly svgCurvePath = computed(() => {
+    const res = this.result();
+    if (!res || !res.equityCurve || res.equityCurve.length < 2) {
+      return "M 0,170 Q 100,160 200,135 T 400,105 T 600,65 T 800,25";
+    }
+
+    const points = res.equityCurve;
+    const minEq = Math.min(...points.map(p => p.equity));
+    const maxEq = Math.max(...points.map(p => p.equity));
+    const range = (maxEq - minEq) || 1;
+
+    const coords = points.map((p, idx) => {
+      const x = Math.round((idx / (points.length - 1)) * 800);
+      // Inversion Y : 180 (bas) à 20 (haut)
+      const y = Math.round(180 - ((p.equity - minEq) / range) * 160);
+      return `${x},${y}`;
+    });
+
+    return `M ${coords.join(' L ')}`;
+  });
+
+  readonly svgAreaPath = computed(() => {
+    const curve = this.svgCurvePath();
+    return `${curve} L 800,200 L 0,200 Z`;
+  });
+
+  ngOnInit(): void {
+    // Exécution initiale automatique pour afficher les données dès l'arrivée
+    this.runSimulation();
+  }
 
   onStrategyChange(e: Event) {
     const val = (e.target as HTMLSelectElement).value;
@@ -433,32 +434,51 @@ export class BacktestingComponent {
     this.riskPerTrade.set(val);
   }
 
-  runSimulation() {
+  async runSimulation() {
     this.isSimulating.set(true);
-    this.simulationProgress.set(0);
+    this.simulationProgress.set(20);
 
-    const interval = setInterval(() => {
-      this.simulationProgress.update(p => {
-        if (p >= 100) {
-          clearInterval(interval);
-          this.isSimulating.set(false);
-          return 100;
-        }
-        return p + 20;
+    const progressTimer = setInterval(() => {
+      this.simulationProgress.update(p => Math.min(p + 25, 90));
+    }, 100);
+
+    try {
+      const response = await this.backtestingService.runBacktest({
+        strategyId: this.selectedStrategyId(),
+        symbol: 'EUR/USD',
+        timeframe: 'H4',
+        period: this.selectedPeriod(),
+        initialCapital: this.initialCapital(),
+        riskPerTradePct: this.riskPerTrade()
       });
-    }, 150);
+
+      clearInterval(progressTimer);
+      this.simulationProgress.set(100);
+      this.result.set(response);
+    } catch (e) {
+      clearInterval(progressTimer);
+      console.error('[Backtesting] Erreur lors de la simulation', e);
+    } finally {
+      this.isSimulating.set(false);
+    }
   }
 
   exportTradesCsv() {
-    const trades = this.currentStrategy().sampleTrades;
-    const headers = ['ID', 'Date', 'Instrument', 'Sens', 'Entree', 'Sortie', 'PnL_USD', 'R_Multiple', 'Duree', 'Resultat'];
-    const rows = trades.map(t => [
+    const res = this.result();
+    if (!res || !res.trades) return;
+
+    const headers = ['ID', 'Date_Entree', 'Date_Sortie', 'Instrument', 'Sens', 'Entree', 'Sortie', 'StopLoss', 'TakeProfit', 'Volume', 'PnL_USD', 'R_Multiple', 'Duree', 'Resultat'];
+    const rows = res.trades.map(t => [
       t.id,
-      t.date,
+      t.entryTime,
+      t.exitTime,
       t.symbol,
-      t.type,
+      t.direction,
       t.entryPrice,
       t.exitPrice,
+      t.stopLoss,
+      t.takeProfit,
+      t.lotSize,
       t.pnlDollar,
       `${t.rMultiple}R`,
       t.duration,
@@ -470,7 +490,7 @@ export class BacktestingComponent {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `forex_intel_backtest_${this.selectedStrategyId()}.csv`);
+    link.setAttribute('download', `forex_intel_backtest_${this.selectedStrategyId()}_${this.selectedPeriod()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

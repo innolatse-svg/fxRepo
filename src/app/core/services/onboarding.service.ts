@@ -1,4 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { 
   AutomationLevel,
   AutomationLevelDetails, 
@@ -352,19 +354,33 @@ export class OnboardingService {
     }));
   }
 
+  private http = inject(HttpClient);
+  // Using the same URL logic as auth.service.ts, or env variable
+  private readonly apiUrl = 'http://localhost:8080/api/v1';
+
   /**
-   * Convert local state to MockUserPreferences and persist to MockUserStorageService
+   * Mark onboarding as completed and persist to backend
    */
-  saveToStorage(): boolean {
+  async completeOnboarding() {
+    this.state.update(current => ({
+      ...current,
+      isCompleted: true,
+      completedAt: new Date().toISOString()
+    }));
+
+    await this.saveToBackend();
+  }
+
+  private async saveToBackend() {
     const current = this.state();
 
-    let levelCode: AutomationLevelCode = 'ANALYSIS';
+    let levelCode = 'ANALYSIS';
     if (current.automationPreferences.selectedLevel === 2) levelCode = 'SIGNALS';
     else if (current.automationPreferences.selectedLevel === 3) levelCode = 'PAPER_TRADING';
     else if (current.automationPreferences.selectedLevel === 4) levelCode = 'DEMO_AUTO';
     else if (current.automationPreferences.selectedLevel === 5) levelCode = 'LIVE_AUTO';
 
-    const accounts: MockUserAccountRecord[] = current.tradingAccounts.map(a => ({
+    const accounts = current.tradingAccounts.map(a => ({
       id: a.id,
       broker: a.brokerName,
       server: a.server,
@@ -378,7 +394,7 @@ export class OnboardingService {
       ...(current.tradingPreferences.otherInstruments || [])
     ]));
 
-    const prefs: MockUserPreferences = {
+    const prefs = {
       selectedPairs: allSelected,
       riskRules: {
         riskPerTradePercent: current.riskPreferences.maxRiskPerTradePct,
@@ -396,20 +412,13 @@ export class OnboardingService {
       tradingAccounts: accounts
     };
 
-    return this.userStorage.updateOnboardingPreferences(prefs);
-  }
-
-  /**
-   * Mark onboarding as completed and persist to mock JSON storage
-   */
-  completeOnboarding() {
-    this.state.update(current => ({
-      ...current,
-      isCompleted: true,
-      completedAt: new Date().toISOString()
-    }));
-
-    this.saveToStorage();
+    try {
+      await firstValueFrom(this.http.put(`${this.apiUrl}/users/me/preferences`, prefs));
+      return true;
+    } catch (e) {
+      console.error('Erreur lors de la sauvegarde de l\'onboarding', e);
+      return false;
+    }
   }
 
   /**

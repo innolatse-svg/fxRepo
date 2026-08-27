@@ -4,6 +4,8 @@ import { DecimalPipe } from '@angular/common';
 import { MarketDemoService } from '../../core/services/market-demo.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { OnboardingService } from '../../core/services/onboarding.service';
+import { TradingAccountService } from '../../core/services/trading-account.service';
+import { AuthService } from '../../core/services/auth.service';
 import { Candle } from '../../core/models/market-intelligence.model';
 import { FinancialChart } from '../../shared/components/financial-chart/financial-chart';
 
@@ -247,15 +249,45 @@ import { FinancialChart } from '../../shared/components/financial-chart/financia
         <div [class]="isSidebarCollapsed() ? 'w-full col-span-12 transition-all duration-300' : 'w-full xl:col-span-8 2xl:col-span-9 transition-all duration-300'">
           
           <!-- High Performance Financial Canvas Chart Container -->
-          <div [class]="isSidebarCollapsed() ? 'w-full rounded-2xl overflow-hidden shadow-sm dark:shadow-2xl h-[720px] sm:h-[780px] 2xl:h-[840px]' : 'w-full rounded-2xl overflow-hidden shadow-sm dark:shadow-2xl h-[640px] sm:h-[700px] 2xl:h-[760px]'">
-            <app-financial-chart 
-              [symbol]="activePair().symbol"
-              [candles]="activeCandles()"
-              [compact]="false"
-              [signalEntryPrice]="generatedSignal().entryPrice"
-              [signalStopLoss]="generatedSignal().stopLoss"
-              [signalTakeProfit]="generatedSignal().takeProfit">
-            </app-financial-chart>
+          <div [class]="isSidebarCollapsed() ? 'w-full rounded-2xl overflow-hidden shadow-sm dark:shadow-2xl h-[720px] sm:h-[780px] 2xl:h-[840px] relative' : 'w-full rounded-2xl overflow-hidden shadow-sm dark:shadow-2xl h-[640px] sm:h-[700px] 2xl:h-[760px] relative'">
+            <div [class.blur-md]="hasNoConnectedAccount()" [class.pointer-events-none]="hasNoConnectedAccount()" class="w-full h-full">
+              <app-financial-chart 
+                [symbol]="activePair().symbol"
+                [candles]="activeCandles()"
+                [compact]="false"
+                [signalEntryPrice]="generatedSignal().entryPrice"
+                [signalStopLoss]="generatedSignal().stopLoss"
+                [signalTakeProfit]="generatedSignal().takeProfit">
+              </app-financial-chart>
+            </div>
+
+            <!-- Data Gating Overlay CTA -->
+            @if (hasNoConnectedAccount()) {
+              <div class="absolute inset-0 z-30 flex items-center justify-center p-6 bg-black/65 backdrop-blur-md rounded-2xl">
+                <div class="max-w-md w-full p-6 rounded-2xl bg-[#0e0e12] border border-amber-500/40 text-center space-y-4 shadow-2xl animate-fadeIn">
+                  <div class="w-12 h-12 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-md">
+                    <span class="mat-icon text-2xl">lock</span>
+                  </div>
+                  <div class="space-y-1.5">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      ACCÈS MARCHÉ RESTREINT (DATA GATING)
+                    </span>
+                    <h3 class="text-lg font-extrabold text-white">Raccordez votre compte MT5</h3>
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                      Connectez votre compte Deriv ou broker MetaTrader 5 (Démo ou Réel) pour débloquer le flux de cotations institutionnelles en direct.
+                    </p>
+                  </div>
+                  <div class="pt-2">
+                    <a 
+                      routerLink="/app/accounts"
+                      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-black font-bold text-xs hover:from-emerald-400 hover:to-teal-300 transition-all shadow-lg shadow-emerald-500/25">
+                      <span class="mat-icon text-sm">cable</span>
+                      <span>Connecter mon Compte MT5</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            }
           </div>
 
         </div>
@@ -533,6 +565,14 @@ export class MarketComponent {
   marketService = inject(MarketDemoService);
   dashboardService = inject(DashboardService);
   onboardingService = inject(OnboardingService);
+  tradingAccountService = inject(TradingAccountService);
+  authService = inject(AuthService);
+
+  readonly hasNoConnectedAccount = computed(() => {
+    const isSuperAdmin = this.authService.currentUser()?.role === 'SUPER_ADMIN';
+    if (isSuperAdmin) return false;
+    return this.tradingAccountService.accounts().length === 0;
+  });
 
   // Fullscreen / Collapsible Sidebar state
   isSidebarCollapsed = signal<boolean>(false);
